@@ -1,0 +1,80 @@
+# ==============================
+# Dependencies / Virtual Environments
+# ==============================
+node_modules/
+env/
+venv/
+.venv/
+ENV/
+
+# ==============================
+# Environment / Secrets
+# ==============================
+.env
+.env.*
+!.env.example
+
+# ==============================
+# Python Cache / Build Files
+# ==============================
+__pycache__/
+*.py[cod]
+*$py.class
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+*.egg-info/
+dist/
+build/
+
+# ==============================
+# Logs
+# ==============================
+*.log
+logs/
+
+# ==============================
+# Local Databases / Generated Data
+# ==============================
+*.db
+*.sqlite
+*.sqlite3
+*.duckdb
+
+# Qdrant local storage
+qdrant_db/
+
+# Generated Markdown / processed documents
+# Uncomment if these are generated automatically:
+markdown/
+processed/
+output/
+
+# ==============================
+# IDE / Editor
+==============================
+.vscode/
+.idea/
+
+# ==============================
+# OS Files
+# ==============================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==============================
+# Jupyter
+# ==============================
+.ipynb_checkpoints/
+
+# ==============================
+# Temporary Files
+# ==============================
+*.tmp
+*.temp
+*.bak
+
+
