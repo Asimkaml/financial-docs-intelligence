@@ -1,5 +1,7 @@
 import os
+from dotenv import load_dotenv
 
+load_dotenv()
 # --- Directory Configuration ---
 _BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
@@ -20,9 +22,11 @@ LLM_TEMPERATURE = 0
 LLM_SEED = 42
 
 # --- Parser Configuration ---
+HF_TOKEN = os.environ.get("HF_TOKEN", "")
 LLAMA_CLOUD_API_KEY = os.environ.get("LLAMA_CLOUD_API_KEY", "")
 DUCKDB_PATH = os.path.join(_BASE_DIR, "financial_data.duckdb")    # structured table store
 DEFAULT_CURRENCY = "PKR"
+DOCLING_ENABLED = False
 
 # --- Retrieval Configuration ---
 RETRIEVAL_SCORE_THRESHOLD = 0.4

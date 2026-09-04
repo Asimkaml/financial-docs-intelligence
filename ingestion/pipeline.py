@@ -78,7 +78,8 @@ class FinancialIngestionPipeline:
         }
 
         parent_chunks, child_chunks = self.rag_system.chunker.create_chunks_single(
-            md_path, source_name=source_name, extra_metadata=extra_metadata,
+            md_path, source_name=source_name,
+            #  extra_metadata=extra_metadata,
         )
 
         if not child_chunks:
