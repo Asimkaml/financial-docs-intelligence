@@ -9,7 +9,7 @@ Replaces the plain "PDF -> pymupdf4llm markdown -> chunker" path with:
     }
 
 Every chunk (parent, child, and table row) is tagged with company,
-period_type, fiscal_period, and currency so retrieval and valuation tools
+period_type, fiscal_period so retrieval and valuation tools
 can filter by them instead of relying on semantic similarity alone.
 """
 
@@ -18,7 +18,6 @@ from typing import List, Tuple
 
 import config
 from ingestion.parsers import DocumentParser
-from ingestion.metadata_extractor import infer_metadata
 from db.duckdb_manager import DuckDBManager
 
 
@@ -60,7 +59,7 @@ class FinancialIngestionPipeline:
         """ Process and index a single financial PDF."""
         source_name = pdf_path.name
         parsed = self.parser.parse(pdf_path)
-        metadata = infer_metadata(pdf_path, source_name, default_currency=config.DEFAULT_CURRENCY)
+        metadata = {}
 
         if parsed.tables:
             n = self.duckdb.save_tables(source_name, metadata, parsed.tables)
@@ -69,17 +68,9 @@ class FinancialIngestionPipeline:
         md_path = self.markdown_dir / f"{pdf_path.stem}.md"
         md_path.write_text(parsed.markdown_text, encoding="utf-8")
 
-        extra_metadata = {
-            "company": metadata.company,
-            "period_type": metadata.period_type,
-            "fiscal_period": metadata.fiscal_period,
-            "currency": metadata.currency,
-            "parser_used": parsed.parser_used,
-        }
-
         parent_chunks, child_chunks = self.rag_system.chunker.create_chunks_single(
             md_path, source_name=source_name,
-            #  extra_metadata=extra_metadata,
+             extra_metadata=metadata,
         )
 
         if not child_chunks:

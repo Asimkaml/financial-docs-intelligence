@@ -25,17 +25,23 @@ class DuckDBManager:
         self._ensure_schema()
 
     def _ensure_schema(self):
+
+        # self._conn.execute("DROP TABLE IF EXISTS filing_tables")
+        
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS filing_tables (
                 id VARCHAR PRIMARY KEY,
                 source VARCHAR,
-                company VARCHAR,
-                period_type VARCHAR,
-                fiscal_period VARCHAR,
-                currency VARCHAR,
-                caption VARCHAR,
-                table_markdown VARCHAR
+                metadata VARCHAR,
+                table_markdown VARCHAR,
+                table_csv VARCHAR,
+                table_caption VARCHAR,
+                page INT,
+                bbox_x FLOAT,
+                bbox_y FLOAT,
+                bbox_w FLOAT,
+                bbox_h FLOAT
             )
             """
         )
@@ -47,30 +53,35 @@ class DuckDBManager:
             (
                 f"{Path(source).stem}_t{i}",
                 source,
-                metadata.company,
-                metadata.period_type,
-                metadata.fiscal_period,
-                metadata.currency,
-                table.caption,
+                metadata,
                 table.markdown,
+                table.csv,
+                table.caption,
+                table.page,
+                table.bbox_x,
+                table.bbox_y,
+                table.bbox_w,
+                table.bbox_h
             )
             for i, table in enumerate(tables)
         ]
         self._conn.executemany(
-            "INSERT OR REPLACE INTO filing_tables VALUES (?, ?, ?, ?, ?, ?, ?, ?)", rows
+            "INSERT OR REPLACE INTO filing_tables VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", rows
         )
         return len(rows)
 
     def query_tables(self, company: Optional[str] = None, fiscal_period: Optional[str] = None):
-        query = "SELECT * FROM filing_tables WHERE 1=1"
-        params = []
-        if company:
-            query += " AND company ILIKE ?"
-            params.append(f"%{company}%")
-        if fiscal_period:
-            query += " AND fiscal_period = ?"
-            params.append(fiscal_period)
-        return self._conn.execute(query, params).fetchdf()
+        # query = "SELECT * FROM filing_tables WHERE 1=1"
+        # params = []
+        # if company:
+        #     query += " AND company ILIKE ?"
+        #     params.append(f"%{company}%")
+        # if fiscal_period:
+        #     query += " AND fiscal_period = ?"
+        #     params.append(fiscal_period)
+        # return self._conn.execute(query, params).fetchdf()
+        pass
+        
 
     def delete_by_source(self, source: str) -> None:
         self._conn.execute("DELETE FROM filing_tables WHERE source = ?", [source])

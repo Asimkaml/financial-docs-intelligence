@@ -27,6 +27,7 @@ LLAMA_CLOUD_API_KEY = os.environ.get("LLAMA_CLOUD_API_KEY", "")
 DUCKDB_PATH = os.path.join(_BASE_DIR, "financial_data.duckdb")    # structured table store
 DEFAULT_CURRENCY = "PKR"
 DOCLING_ENABLED = False
+PAGE_MARKER = "<!--page:{}-->"
 
 # --- Retrieval Configuration ---
 RETRIEVAL_SCORE_THRESHOLD = 0.4

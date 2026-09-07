@@ -16,7 +16,7 @@ from pathlib import Path
 
 from core.rag_system import RAGSystem
 from ingestion.pipeline import FinancialIngestionPipeline
-from ingestion.metadata_extractor import infer_metadata
+# from ingestion.metadata_extractor import infer_metadata
 
 
 def main(pdf_paths):
@@ -29,11 +29,11 @@ def main(pdf_paths):
         pdf_path = Path(pdf_path)
         print(f"\n--- {pdf_path.name} ---")
 
-        metadata = infer_metadata(pdf_path, pdf_path.name)
-        print(f"Inferred metadata: company={metadata.company!r} "
-              f"period_type={metadata.period_type} fiscal_period={metadata.fiscal_period} "
-              f"currency={metadata.currency}")
-        print("(check this looks right -- it's filename-based and easy to get wrong)")
+        metadata = {"doc":pdf_path.name}
+        # print(f"Inferred metadata: company={metadata.company!r} "
+        #       f"period_type={metadata.period_type} fiscal_period={metadata.fiscal_period} "
+        #       f"currency={metadata.currency}")
+        # print("(check this looks right -- it's filename-based and easy to get wrong)")
 
     added, skipped, errors = pipeline.ingest(pdf_paths, progress_callback=lambda p, desc: print(f"  {desc}"))
     print(f"\nDone. Added: {added}  Skipped: {skipped}")

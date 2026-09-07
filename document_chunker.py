@@ -2,9 +2,13 @@ import os
 import glob
 import config
 from pathlib import Path
+import re
 from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
 
+
 class DocumentChunker:
+    PAGE_MARKER_RE = re.compile(r"<!--page:(\d+)-->\n?")
+    
     def __init__(self):
         if config.MIN_PARENT_SIZE <= 0 or config.MAX_PARENT_SIZE < config.MIN_PARENT_SIZE:
             raise ValueError("Parent chunk sizes must be positive and MIN_PARENT_SIZE <= MAX_PARENT_SIZE.")
@@ -50,7 +54,20 @@ class DocumentChunker:
         
         return all_parent_chunks, all_child_chunks
 
-    def create_chunks_single(self, md_path, source_name=None):
+
+    def __annotate_page_ranges(self, chunks):
+        current_page = None
+        for chunk in chunks:
+            pages = [int(p) for p in self.PAGE_MARKER_RE.findall(chunk.page_content)]
+            if pages:
+                chunk.metadata["page_start"], chunk.metadata["page_end"] = pages[0], pages[-1]
+                current_page = pages[-1]
+            elif current_page is not None:
+                chunk.metadata["page_start"] = chunk.metadata["page_end"] = current_page
+            chunk.page_content = self.PAGE_MARKER_RE.sub("", chunk.page_content).strip()
+
+
+    def create_chunks_single(self, md_path, source_name=None, extra_metadata=None):
         doc_path = Path(md_path)
         source_name = source_name or f"{doc_path.stem}.pdf"
         
@@ -62,7 +79,9 @@ class DocumentChunker:
         cleaned_parents = self.__clean_small_chunks(split_parents)
         if any(len(chunk.page_content) > self.__max_parent_size for chunk in cleaned_parents):
             raise ValueError("Parent chunking produced a chunk larger than MAX_PARENT_SIZE.")
-        
+
+        self.__annotate_page_ranges(cleaned_parents) 
+
         all_parent_chunks, all_child_chunks = [], []
         self.__create_child_chunks(
             all_parent_chunks,
