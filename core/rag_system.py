@@ -3,6 +3,7 @@ from langchain_ollama import ChatOllama
 import config
 from db.vector_db_manager import VectorDbManager
 from db.parent_store_manager import ParentStoreManager
+from db.duckdb_manager import DuckDBManager
 from document_chunker import DocumentChunker
 from rag_agent.tools import ToolFactory
 from rag_agent.graph import create_agent_graph
@@ -14,6 +15,7 @@ class RAGSystem:
         self.collection_name = collection_name
         self.vector_db = VectorDbManager()
         self.parent_store = ParentStoreManager()
+        self.duckdb = DuckDBManager()          # NEW — single shared instance
         self.chunker = DocumentChunker()
         self.observability = Observability()
         self.agent_graph = None
@@ -29,7 +31,7 @@ class RAGSystem:
             temperature=config.LLM_TEMPERATURE,
             seed=config.LLM_SEED,
         )
-        tools = ToolFactory(collection).create_tools()
+        tools = ToolFactory(collection, self.duckdb).create_tools()   # pass it through
         self.agent_graph = create_agent_graph(llm, tools)
 
     def get_config(self):

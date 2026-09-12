@@ -67,18 +67,18 @@ class FinancialIngestionPipeline:
 
         md_path = self.markdown_dir / f"{pdf_path.stem}.md"
         md_path.write_text(parsed.markdown_text, encoding="utf-8")
+        # exit()
+        # parent_chunks, child_chunks = self.rag_system.chunker.create_chunks_single(
+        #     md_path, source_name=source_name,
+        #      extra_metadata=metadata,
+        # )
 
-        parent_chunks, child_chunks = self.rag_system.chunker.create_chunks_single(
-            md_path, source_name=source_name,
-             extra_metadata=metadata,
-        )
+        # if not child_chunks:
+        #     raise ValueError("No narrative child chunks were created (parser may have returned only tables).")
 
-        if not child_chunks:
-            raise ValueError("No narrative child chunks were created (parser may have returned only tables).")
-
-        self.rag_system.parent_store.save_many(parent_chunks)
-        collection = self.rag_system.vector_db.get_collection(self.rag_system.collection_name)
-        collection.add_documents(child_chunks)
+        # self.rag_system.parent_store.save_many(parent_chunks)
+        # collection = self.rag_system.vector_db.get_collection(self.rag_system.collection_name)
+        # collection.add_documents(child_chunks)
 
     def clear_all(self) -> None:
         """ Clear all structured financial data stored in DuckDB."""

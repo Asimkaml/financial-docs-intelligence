@@ -10,7 +10,7 @@ class DocumentManager:
         self.rag_system = rag_system
         self.markdown_dir = Path(config.MARKDOWN_DIR)
         self.markdown_dir.mkdir(parents=True, exist_ok=True)
-        self.pipeline = FinancialIngestionPipeline(rag_system)
+        self.pipeline = FinancialIngestionPipeline(rag_system, duckdb_manager=rag_system.duckdb)
 
     def add_documents(self, document_paths, progress_callback=None):
         if not document_paths:

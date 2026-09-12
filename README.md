@@ -50,6 +50,8 @@ The application will be available at `http://localhost:7860` (default Gradio por
 
 This system implements an advanced RAG pipeline with the following key features:
 
+- **Financial Document Ingestion**: PDFs are parsed with LlamaParse (agentic tier, tuned for financial statements), falling back to Docling if LlamaParse is unavailable or fails
+- **Table/Narrative Split**: Extracted tables (balance sheets, income statements, etc.) are stored as structured rows in DuckDB for exact lookup; narrative text is chunked and indexed for semantic search — so "what was net income in Q2FY2024" doesn't depend on a fuzzy embedding match
 - **Parent-Child Chunking**: Documents are split into small child chunks (for precise retrieval) linked to larger parent chunks (for rich context)
 - **Hybrid Search**: Combines dense embeddings and sparse (BM25) retrieval for optimal results
 - **LangGraph Agent**: Orchestrates query rewriting, retrieval, and response generation
@@ -60,8 +62,9 @@ This system implements an advanced RAG pipeline with the following key features:
 
 ### Data Flow
 
-```
-PDF → Markdown Conversion → Parent/Child Chunking → Vector Indexing → Agent Retrieval → LLM Response
+```  ┌─ Tables → DuckDB (exact structured lookup) ------------------------- ──┐
+PDF                                                                           ▼
+     └─ → Markdown Conversion → Parent/Child Chunking → Vector Indexing → Agent Retrieval → LLM Response
 ```
 
 ---
@@ -83,9 +86,16 @@ PDF → Markdown Conversion → Parent/Child Chunking → Vector Indexing → Ag
 | File | Purpose |
 |------|---------|
 | `project/core/rag_system.py` | System bootstrap - creates managers and compiles LangGraph agent |
-| `project/core/document_manager.py` | Document ingestion pipeline (convert, chunk, index) |
+| `project/core/document_manager.py` | Routes uploads by type: PDFs go to FinancialIngestionPipeline; plain .md files are chunked and indexed directly, skipping parsing/table extraction |
 | `project/core/chat_interface.py` | Streams the aggregated answer while separating query analysis and tool activity from internal node output |
 | `project/core/observability.py` | Optional Langfuse tracing — callback handler lifecycle |
+
+### Ingestion Pipeline
+
+| File | Purpose |
+|------|---------|
+| `project/ingestion/pipeline.py` | FinancialIngestionPipeline — orchestrates parse → table storage → chunk → index for each PDF; continues past per-file failures and reports them |
+| `project/ingestion/parsers.py` | DocumentParser — LlamaParse (primary) with Docling fallback; splits a parsed result into narrative markdown (with embedded page markers) and structured ParsedTable objects, including per-table bounding boxes |
 
 ### Database Layer
 
@@ -93,6 +103,7 @@ PDF → Markdown Conversion → Parent/Child Chunking → Vector Indexing → Ag
 |------|---------|
 | `project/db/vector_db_manager.py` | Qdrant client wrapper with embedding initialization |
 | `project/db/parent_store_manager.py` | File-backed storage for parent chunks |
+| `project/db/duckdb_manager.py` | DuckDBManager — structured store for extracted tables |
 
 ### RAG Agent (LangGraph)
 
@@ -125,6 +136,7 @@ All primary settings are in `project/config.py`. Key parameters:
 MARKDOWN_DIR = "markdown_docs"        # Storage for converted PDF → Markdown files
 PARENT_STORE_PATH = "parent_store"    # File-backed storage for parent chunks
 QDRANT_DB_PATH = "qdrant_db"          # Local Qdrant vector database path
+DUCKDB_PATH = "duckdb/filings.duckdb" # Structured store for tables extracted from filings
 ```
 
 ### Qdrant Configuration

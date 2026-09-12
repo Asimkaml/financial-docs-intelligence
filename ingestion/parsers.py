@@ -7,11 +7,11 @@ from typing import List, Optional
 import config
 
 # --- debugging ---
-# _BASE_DIR = Path(__file__).resolve().parent.parent
+_BASE_DIR = Path(__file__).resolve().parent.parent
 
-# LLAMAPARSE_OUTPUT_DIR = _BASE_DIR.parent / "llamaparse_output"
-# LLAMAPARSE_RAW_DIR = LLAMAPARSE_OUTPUT_DIR / "raw"
-# LLAMAPARSE_TABLES_DIR = LLAMAPARSE_OUTPUT_DIR / "tables"
+LLAMAPARSE_OUTPUT_DIR = _BASE_DIR.parent / "llamaparse_output"
+LLAMAPARSE_RAW_DIR = LLAMAPARSE_OUTPUT_DIR / "raw"
+LLAMAPARSE_TABLES_DIR = LLAMAPARSE_OUTPUT_DIR / "tables"
 
 # LLAMAPARSE_RAW_DIR.mkdir(parents=True, exist_ok=True)
 # LLAMAPARSE_TABLES_DIR.mkdir(parents=True, exist_ok=True)
@@ -121,46 +121,89 @@ class DocumentParser:
             agentic_options={
                 "custom_prompt": "This is a company financial statement (annual or quarterly report, possibly IFRS-format). Preserve every table exactly as rows and columns, including headers, units (thousands/millions), and currency labels. Do not summarize or omit numeric tables. Keep statement names (e.g. Statement of Financial Position, Profit and Loss) as headings."
             },
-            processing_options={"cost_optimizer": {"enable": True}},
-            expand=["markdown", "items"],
+            # processing_options={"cost_optimizer": {"enable": True}},
+            expand=["items"],
         )
 
         if result.job.status != "COMPLETED":
             raise RuntimeError(f"LlamaParse job ended as {result.job.status}")
+        # save llamaparse output to json file
+        import json
+        
+        with open(LLAMAPARSE_RAW_DIR / f"{pdf_path.stem}.json", "w", encoding="utf-8") as f:
+            json.dump(result.items.to_dict(), f, indent=2, ensure_ascii=False)
 
         return result
 
     def process_parsed_document(self, result):
-        """turns a completed LlamaParse result into markdown + tables."""
-        markdown_text = "\n\n".join(
-            f"{config.PAGE_MARKER.format(page.page_number)}\n{page.markdown}"
-            for page in result.markdown.pages
-        )
-
+        pages_md = []
         tables = []
+        heading_run = []             # md text of the current unbroken run of heading items
+        last_heading_caption = None  # joined caption from the most recent run (persists across pages)
+        prev_was_heading = False
+
         for page in result.items.pages:
+            narrative_lines = [config.PAGE_MARKER.format(page.page_number)]
+
             for item in page.items:
-                if getattr(item, "type", None) != "table":
+                item_type = getattr(item, "type", None)
+
+                if item_type == "heading":
+                    if not prev_was_heading:
+                        heading_run = []          # non-heading content broke the run — start fresh
+                    heading_run.append(item.md)
+                    last_heading_caption = " -> ".join(
+                        self._clean_caption(h) for h in heading_run
+                    )
+                    narrative_lines.append(item.md)
+                    prev_was_heading = True
                     continue
-                caption = getattr(item, "caption", None) or f"Table (page {page.page_number})"
-                bbox = self.get_table_bbox(item)
-  
-                tables.append(ParsedTable(
-                    caption=caption, markdown=item.md, csv=item.csv, page=page.page_number,
-                    bbox_x=bbox.x if bbox else None, bbox_y=bbox.y if bbox else None,
-                    bbox_w=bbox.w if bbox else None, bbox_h=bbox.h if bbox else None,
-                ))
-        #saving tables to llama_tables  directory in json format (will be removed later)
-        # import json
-        # import dataclasses
 
-        # table_file_path = LLAMAPARSE_TABLES_DIR / f"t.json"
-        # with open(table_file_path, "w", encoding="utf-8") as f:
-        #     json.dump([dataclasses.asdict(t) for t in tables], f, ensure_ascii=False, indent=4)
-        # exit()
+                prev_was_heading = False
 
+                if item_type in ("table", "chart"):
+                    caption = last_heading_caption or f"Table (page {page.page_number})"
+                    bbox = self.get_table_bbox(item)
+                    tables.append(ParsedTable(
+                        caption=caption, markdown=item.md, csv=item.csv, page=page.page_number,
+                        bbox_x=bbox.x if bbox else None, bbox_y=bbox.y if bbox else None,
+                        bbox_w=bbox.w if bbox else None, bbox_h=bbox.h if bbox else None,
+                    ))
+                    continue
 
+                md = getattr(item, "md", None)
+                if md:
+                    narrative_lines.append(md)
+
+            pages_md.append("\n\n".join(narrative_lines))
+
+        markdown_text = "\n\n".join(pages_md)
+
+        # saving tables to llama_tables  directory in json format (will be removed later)
+        import json
+        import dataclasses
+
+        table_file_path = LLAMAPARSE_TABLES_DIR / f"t.json"
+        with open(table_file_path, "w", encoding="utf-8") as f:
+            json.dump([dataclasses.asdict(t) for t in tables], f, ensure_ascii=False, indent=4)
+        # --------------------------------------
+        
         return ParsedDocument(markdown_text=markdown_text, tables=tables, parser_used="llamaparse")
+
+    @staticmethod
+    def _build_caption(heading_stack, page_number, max_len=200):
+        if not heading_stack:
+            return f"Table (page {page_number})"
+        caption = " -> ".join(
+            DocumentParser._clean_caption(heading_stack[lvl]) for lvl in sorted(heading_stack)
+        )
+        return caption[:max_len].rstrip() + ("…" if len(caption) > max_len else "")
+        
+    @staticmethod
+    def _clean_caption(text: str, max_len: int = 200) -> str:
+        text = re.sub(r"^#+\s*", "", text.strip())  # strip leading markdown heading hashes
+        text = " ".join(text.split())                # collapse embedded newlines/whitespace
+        return text[:max_len].rstrip() + ("…" if len(text) > max_len else "")
 
     def _parse_with_llamaparse(self, pdf_path: Path) -> ParsedDocument:
         result = self.get_llamaparse_output(pdf_path)

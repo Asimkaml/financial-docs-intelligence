@@ -70,17 +70,17 @@ class DuckDBManager:
         )
         return len(rows)
 
-    def query_tables(self, company: Optional[str] = None, fiscal_period: Optional[str] = None):
-        # query = "SELECT * FROM filing_tables WHERE 1=1"
-        # params = []
-        # if company:
-        #     query += " AND company ILIKE ?"
-        #     params.append(f"%{company}%")
-        # if fiscal_period:
-        #     query += " AND fiscal_period = ?"
-        #     params.append(fiscal_period)
-        # return self._conn.execute(query, params).fetchdf()
-        pass
+    
+    def query_tables(self, source: Optional[str] = None, caption_contains: Optional[str] = None):
+        query = "SELECT * FROM filing_tables WHERE 1=1"
+        params = []
+        if source:
+            query += " AND source = ?"
+            params.append(source)
+        if caption_contains:
+            query += " AND table_caption ILIKE ?"
+            params.append(f"%{caption_contains}%")
+        return self._conn.execute(query, params).fetchdf()
         
 
     def delete_by_source(self, source: str) -> None:

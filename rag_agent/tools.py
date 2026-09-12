@@ -5,9 +5,10 @@ from core.execution_logger import log_error, log_tool_end, log_tool_start
 
 class ToolFactory:
     
-    def __init__(self, collection):
+    def __init__(self, collection, duckdb_manager=None):
         self.collection = collection
         self.parent_store_manager = ParentStoreManager()
+        self.duckdb = duckdb_manager
     
     def _search_child_chunks(self, query: str, limit: int = config.DEFAULT_RETRIEVAL_K) -> str:
         """Search document excerpts for evidence related to the user question.
@@ -79,10 +80,56 @@ class ToolFactory:
             output = f"PARENT_RETRIEVAL_ERROR: {str(e)}"
             log_tool_end("retrieve_parent_chunks", output)
             return output
-    
+
+    def _search_filing_tables(self, source: str = None, caption_contains: str = None) -> str:
+        """Search structured financial tables extracted from filings (balance sheets,
+        income statements, cash flow statements). Use this when the question needs
+        exact figures from a table rather than narrative discussion — prefer this over
+        search_child_chunks for numeric lookups.
+
+        Note: tables are currently stored as whole blocks, not individual line items —
+        this returns full table content matching the filter, for you to read the
+        relevant figure from directly.
+
+        Args:
+            source: Exact filing filename to restrict results to (e.g. "sys_hf_26.pdf").
+            caption_contains: Substring to match against the table's section heading
+                (e.g. "profit or loss", "balance sheet"). Case-insensitive.
+        """
+        log_tool_start("search_filing_tables", {"source": source, "caption_contains": caption_contains})
+        try:
+            if self.duckdb is None:
+                output = "TABLE_STORE_UNAVAILABLE"
+                log_tool_end("search_filing_tables", output)
+                return output
+
+            df = self.duckdb.query_tables(source=source, caption_contains=caption_contains)
+            if df.empty:
+                output = "NO_MATCHING_TABLES"
+                log_tool_end("search_filing_tables", output)
+                return output
+
+            output = config.CHILD_CHUNK_SEPARATOR.join([
+                f"File Name: {row['source']}\n"
+                f"Section: {row['table_caption']}\n"
+                f"Page: {row['page']}\n"
+                f"Table:\n{row['table_markdown']}"
+                for _, row in df.iterrows()
+            ])
+            log_tool_end("search_filing_tables", output)
+            return output
+
+        except Exception as e:
+            log_error("search_filing_tables", e)
+            output = f"TABLE_RETRIEVAL_ERROR: {str(e)}"
+            log_tool_end("search_filing_tables", output)
+            return output
+
     def create_tools(self) -> list:
         """Create and return the list of tools."""
         search_tool = tool("search_child_chunks")(self._search_child_chunks)
         retrieve_tool = tool("retrieve_parent_chunks")(self._retrieve_parent_chunks)
-        
-        return [search_tool, retrieve_tool]
+        table_tool = tool("search_filing_tables")(self._search_filing_tables)
+
+        return [search_tool, retrieve_tool, table_tool]
+    

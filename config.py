@@ -8,7 +8,7 @@ _BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 MARKDOWN_DIR = os.path.join(_BASE_DIR, "markdown_docs")
 PARENT_STORE_PATH = os.path.join(_BASE_DIR, "parent_store")
 QDRANT_DB_PATH = os.path.join(_BASE_DIR, "qdrant_db")
-
+DUCKDB_PATH = os.path.join(_BASE_DIR, "duckdb/filings.duckdb")    # structured table store
 # --- Qdrant Configuration ---
 CHILD_COLLECTION = "document_child_chunks"
 SPARSE_VECTOR_NAME = "sparse"
