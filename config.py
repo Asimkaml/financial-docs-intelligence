@@ -16,6 +16,9 @@ SPARSE_VECTOR_NAME = "sparse"
 # --- Model Configuration ---
 DENSE_MODEL = "Qwen/Qwen3-Embedding-0.6B"
 SPARSE_MODEL = "Qdrant/bm25"
+LLM_PROVIDER = "gemini"
+GEMINI_MODEL = "gemini-3.1-flash-lite"
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 LLM_MODEL = "granite4.1:8b"
 JUDGE_MODEL = "ministral-3:3b-instruct-2512-q8_0"
 LLM_TEMPERATURE = 0
@@ -24,8 +27,8 @@ LLM_SEED = 42
 # --- Parser Configuration ---
 HF_TOKEN = os.environ.get("HF_TOKEN", "")
 LLAMA_CLOUD_API_KEY = os.environ.get("LLAMA_CLOUD_API_KEY", "")
-DUCKDB_PATH = os.path.join(_BASE_DIR, "financial_data.duckdb")    # structured table store
-DEFAULT_CURRENCY = "PKR"
+# DUCKDB_PATH = os.path.join(_BASE_DIR, "financial_data.duckdb")    # structured table store
+# DEFAULT_CURRENCY = "PKR"
 DOCLING_ENABLED = False
 PAGE_MARKER = "<!--page:{}-->"
 

@@ -2,6 +2,8 @@ import json
 import re
 from langchain_core.messages import HumanMessage, AIMessageChunk, ToolMessage
 from core.execution_logger import log_chat_end, log_chat_start, log_error
+from core.llm_content import LLMContentNormalizer
+
 
 SYSTEM_NODES = {"summarize_history", "rewrite_query"}
 FINAL_RESPONSE_NODES = {"aggregate_answers"}
@@ -55,13 +57,13 @@ def format_rewrite_content(buffer):
 # --- End of Helpers ---
 
 class ChatInterface:
-
+    
     def __init__(self, rag_system):
         self.rag_system = rag_system
 
     def _handle_system_node(self, chunk, node, response_messages, system_node_buffer):
         """Update (or create) the collapsible system-node message and surface any clarification."""
-        system_node_buffer[node] = system_node_buffer.get(node, "") + chunk.content
+        system_node_buffer[node] = system_node_buffer.get(node, "") + LLMContentNormalizer.to_text(chunk.content)
         buffer = system_node_buffer[node]
         title  = SYSTEM_NODE_CONFIG[node]["title"]
         content = format_rewrite_content(buffer) if node == "rewrite_query" else buffer
@@ -108,7 +110,7 @@ class ChatInterface:
         last = response_messages[-1] if response_messages else None
         if not (last and last.get("role") == "assistant" and "metadata" not in last):
             response_messages.append(make_message(""))
-        response_messages[-1]["content"] += chunk.content
+        response_messages[-1]["content"] += LLMContentNormalizer.to_text(chunk.content)
 
     def chat(self, message, history):
         """Generator that streams Gradio chat message dicts."""

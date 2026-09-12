@@ -1,6 +1,8 @@
 from typing import Literal, Set
 from langchain_core.messages import SystemMessage, HumanMessage, RemoveMessage, AIMessage, ToolMessage
 from langgraph.types import Command
+
+from core.llm_content import LLMContentNormalizer
 from .graph_state import State, AgentState
 from .schemas import QueryAnalysis
 from .prompts import *
@@ -104,7 +106,7 @@ def summarize_history(state: State, llm):
         SystemMessage(content=get_conversation_summary_prompt()),
         HumanMessage(content=conversation),
     ])
-    updates["conversation_summary"] = summary_response.content.strip()
+    updates["conversation_summary"] = LLMContentNormalizer.to_text(summary_response.content).strip()
     return updates
 
 def rewrite_query(state: State, llm):
@@ -179,7 +181,7 @@ def orchestrator(state: AgentState, llm_with_tools):
     )
     if not state.get("messages"):
         human_msg = HumanMessage(content=state["question"], name="agent_question")
-        force_search = HumanMessage(content="YOU MUST CALL 'search_child_chunks' AS THE FIRST STEP TO ANSWER THIS QUESTION.")
+        force_search = HumanMessage(content="YOU MUST CALL A SEARCH TOOL AS THE FIRST STEP TO ANSWER THIS QUESTION. Use 'search_filing_tables' if the question asks for a specific financial figure or table; otherwise use 'search_child_chunks'.")
         response = llm_with_tools.invoke([sys_msg] + summary_injection + [human_msg, force_search])
         response = _name_internal_message(response, "agent_response")
         return {"messages": [human_msg, response], "tool_call_count": len(response.tool_calls or []), "iteration_count": 1}
@@ -237,6 +239,9 @@ def should_compress_context(state: AgentState) -> Command[Literal["compress_cont
                     query = tc["args"].get("query", "")
                     if query:
                         new_ids.add(f"search::{query}")
+                elif tc["name"] == "search_filing_tables":
+                    key = f"{tc['args'].get('source', '')}|{tc['args'].get('caption_contains', '')}"
+                    new_ids.add(f"table::{key}")
             break
 
     updated_ids = state.get("retrieval_keys", set()) | new_ids
@@ -279,7 +284,7 @@ def compress_context(state: AgentState, llm):
             conversation_text += f"[TOOL RESULT — {tool_name}]\n{msg.content}\n\n"
 
     summary_response = llm.invoke([SystemMessage(content=get_context_compression_prompt()), HumanMessage(content=conversation_text)])
-    new_summary = summary_response.content
+    new_summary = LLMContentNormalizer.to_text(summary_response.content)
 
     retrieved_ids: Set[str] = state.get("retrieval_keys", set())
     if retrieved_ids:
@@ -298,7 +303,7 @@ def compress_context(state: AgentState, llm):
 def collect_answer(state: AgentState):
     last_message = state["messages"][-1]
     is_valid = isinstance(last_message, AIMessage) and last_message.content and not last_message.tool_calls
-    answer = last_message.content if is_valid else "Unable to generate an answer."
+    answer = LLMContentNormalizer.to_text(last_message.content) if is_valid else "..."
     return {
         "final_answer": answer,
         "agent_answers": [{

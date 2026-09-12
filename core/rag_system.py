@@ -26,11 +26,19 @@ class RAGSystem:
         self.vector_db.create_collection(self.collection_name)
         collection = self.vector_db.get_collection(self.collection_name)
 
-        llm = ChatOllama(
-            model=config.LLM_MODEL,
-            temperature=config.LLM_TEMPERATURE,
-            seed=config.LLM_SEED,
-        )
+        if config.LLM_PROVIDER == "gemini":
+            from langchain_google_genai import ChatGoogleGenerativeAI
+            llm = ChatGoogleGenerativeAI(
+                model=config.GEMINI_MODEL,
+                temperature=config.LLM_TEMPERATURE,
+                max_retries=1,  # fail fast rather than silently burn through RPM on internal retries
+            )
+        else:
+            llm = ChatOllama(
+                model=config.LLM_MODEL,
+                temperature=config.LLM_TEMPERATURE,
+                seed=config.LLM_SEED,
+            )
         tools = ToolFactory(collection, self.duckdb).create_tools()   # pass it through
         self.agent_graph = create_agent_graph(llm, tools)
 
