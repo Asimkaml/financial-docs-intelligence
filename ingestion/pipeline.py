@@ -14,6 +14,7 @@ can filter by them instead of relying on semantic similarity alone.
 """
 
 from pathlib import Path
+import shutil 
 from typing import List, Tuple
 
 import config
@@ -29,6 +30,8 @@ class FinancialIngestionPipeline:
         self.duckdb = duckdb_manager or DuckDBManager()
         self.markdown_dir = Path(config.MARKDOWN_DIR)
         self.markdown_dir.mkdir(parents=True, exist_ok=True)
+        self.pdf_dir = Path(config.PDF_DIR)
+        self.pdf_dir.mkdir(parents=True, exist_ok=True)
 
     def ingest(self, pdf_paths, progress_callback=None) -> Tuple[int, int, List[Tuple[str, str]]]:
         """ Ingest multiple financial PDF documents. If one document fails, the pipeline records the error and continues processing the remaining documents. 
@@ -61,12 +64,18 @@ class FinancialIngestionPipeline:
         parsed = self.parser.parse(pdf_path)
         metadata = {}
         md_path = self.markdown_dir / f"{pdf_path.stem}.md"
+        dest_pdf_path = self.pdf_dir / source_name  
 
         try:
             if parsed.tables:
                 n = self.duckdb.save_tables(source_name, metadata, parsed.tables)
                 print(f"  ↳ {n} table(s) stored in DuckDB for {source_name}")
 
+            if parsed.page_dimensions:
+                self.duckdb.save_page_dimensions(source_name, parsed.page_dimensions)
+
+            shutil.copy(pdf_path, dest_pdf_path)
+            
             md_path.write_text(parsed.markdown_text, encoding="utf-8")
 
             parent_chunks, child_chunks = self.rag_system.chunker.create_chunks_single(
@@ -83,6 +92,8 @@ class FinancialIngestionPipeline:
             self.duckdb.delete_by_source(source_name)  # roll back any tables already saved
             if md_path.exists():
                 md_path.unlink()                        # remove the stale markdown so re-upload can retry
+            if dest_pdf_path.exists():
+                dest_pdf_path.unlink()
             raise
 
     def clear_all(self) -> None:

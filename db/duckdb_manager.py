@@ -45,6 +45,17 @@ class DuckDBManager:
             )
             """
         )
+        self._conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS document_pages (
+                source VARCHAR,
+                page INT,
+                width FLOAT,
+                height FLOAT,
+                PRIMARY KEY (source, page)
+            )
+            """
+        )
 
     def save_tables(self, source: str, metadata, tables: List) -> int:
         if not tables:
@@ -85,9 +96,29 @@ class DuckDBManager:
 
     def delete_by_source(self, source: str) -> None:
         self._conn.execute("DELETE FROM filing_tables WHERE source = ?", [source])
+        self._conn.execute("DELETE FROM document_pages WHERE source = ?", [source])  
 
-    def list_sources(self) -> List[str]:
-        return [r[0] for r in self._conn.execute("SELECT DISTINCT source FROM filing_tables").fetchall()]
+    def clear(self) -> None:
+        self._conn.execute("DELETE FROM filing_tables")
+        self._conn.execute("DELETE FROM document_pages")
+
+    def save_page_dimensions(self, source: str, pages: List[tuple]) -> int:
+        """pages: list of (page_number, width, height)."""
+        if not pages:
+            return 0
+        rows = [(source, p, w, h) for p, w, h in pages]
+        self._conn.executemany(
+            "INSERT OR REPLACE INTO document_pages VALUES (?, ?, ?, ?)", rows
+        )
+
+        return len(rows)
+
+    def get_page_dimensions(self, source: str, page: int):
+        row = self._conn.execute(
+            "SELECT width, height FROM document_pages WHERE source = ? AND page = ?",
+            [source, page],
+        ).fetchone()
+        return {"width": row[0], "height": row[1]} if row else None
 
     def clear(self) -> None:
         self._conn.execute("DELETE FROM filing_tables")

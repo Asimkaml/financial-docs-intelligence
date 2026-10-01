@@ -6,6 +6,7 @@ load_dotenv()
 _BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 MARKDOWN_DIR = os.path.join(_BASE_DIR, "markdown_docs")
+PDF_DIR = os.path.join(_BASE_DIR, "source_docs")
 PARENT_STORE_PATH = os.path.join(_BASE_DIR, "parent_store")
 QDRANT_DB_PATH = os.path.join(_BASE_DIR, "qdrant_db")
 DUCKDB_PATH = os.path.join(_BASE_DIR, "duckdb/filings.duckdb")    # structured table store

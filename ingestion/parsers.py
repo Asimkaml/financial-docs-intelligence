@@ -35,6 +35,7 @@ class ParsedDocument:
     markdown_text: str
     tables: List[ParsedTable] = field(default_factory=list)
     parser_used: str = ""
+    page_dimensions: List[tuple] = field(default_factory=list)
 
 
 class DocumentParser:
@@ -138,12 +139,14 @@ class DocumentParser:
     def process_parsed_document(self, result):
         pages_md = []
         tables = []
+        page_dimensions = []  
         heading_run = []             # md text of the current unbroken run of heading items
         last_heading_caption = None  # joined caption from the most recent run (persists across pages)
         prev_was_heading = False
 
         for page in result.items.pages:
             narrative_lines = [config.PAGE_MARKER.format(page.page_number)]
+            page_dimensions.append((page.page_number, page.page_width, page.page_height))
 
             for item in page.items:
                 item_type = getattr(item, "type", None)
@@ -188,7 +191,7 @@ class DocumentParser:
             json.dump([dataclasses.asdict(t) for t in tables], f, ensure_ascii=False, indent=4)
         # --------------------------------------
         
-        return ParsedDocument(markdown_text=markdown_text, tables=tables, parser_used="llamaparse")
+        return ParsedDocument(markdown_text=markdown_text, tables=tables, parser_used="llamaparse", page_dimensions=page_dimensions)
 
     @staticmethod
     def _build_caption(heading_stack, page_number, max_len=200):

@@ -42,7 +42,7 @@ logs/
 *.sqlite
 *.sqlite3
 *.duckdb
-docs/*
+*.pdf
 
 # Qdrant local storage
 qdrant_db/
