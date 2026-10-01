@@ -187,8 +187,10 @@ class DocumentParser:
         import dataclasses
 
         table_file_path = LLAMAPARSE_TABLES_DIR / f"t.json"
-        with open(table_file_path, "w", encoding="utf-8") as f:
-            json.dump([dataclasses.asdict(t) for t in tables], f, ensure_ascii=False, indent=4)
+        # open or create if not exists
+        if table_file_path.exists():
+            with open(table_file_path, "w", encoding="utf-8") as f:
+                json.dump([dataclasses.asdict(t) for t in tables], f, ensure_ascii=False, indent=4)
         # --------------------------------------
         
         return ParsedDocument(markdown_text=markdown_text, tables=tables, parser_used="llamaparse", page_dimensions=page_dimensions)
