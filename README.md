@@ -1,717 +1,347 @@
-# Agentic RAG System Documentation
+# Financial RAG Assistant
 
-An **Agentic Retrieval-Augmented Generation (RAG)** system built with **LangGraph**, featuring **parent–child chunking**, **hybrid dense + sparse retrieval**, structured **citation tracking**, and a local Ollama-first setup that can be adapted to other LLM providers.
+An agentic Retrieval-Augmented Generation backend for researching company financial statements (built around Pakistan Stock Exchange filings). Upload a filing PDF, ask questions in natural language, and get answers that cite the exact source page, with a bounding box for figures taken from tables.
 
+Built with **LangGraph**, **LangChain**, **Qdrant** (narrative text), **DuckDB** (tables), **LlamaParse** (PDF parsing) and **FastAPI**. A separate React frontend consumes the API; it is not part of this repository.
 
 ## Table of Contents
 
-[Quick Start](#quick-start) | [Architecture Overview](#architecture-overview) | [Citation Tracking](#citation-tracking) | [Project Structure](#project-structure) | [Configuration Guide](#configuration-guide) | [Common Customizations](#common-customizations) | [Observability](#observability) | [Advanced Topics](#advanced-topics) | [Troubleshooting](#troubleshooting)
+[Architecture](#architecture) | [Ingestion Pipeline](#ingestion-pipeline) | [Agent Graph](#agent-graph) | [Citation Tracking](#citation-tracking) | [REST API](#rest-api) | [Project Structure](#project-structure) | [Configuration](#configuration) | [Setup and Running](#setup-and-running) | [Observability](#observability) | [Development Utilities](#development-utilities) | [Known Limitations](#known-limitations) | [Troubleshooting](#troubleshooting)
 
 ---
 
-## Quick Start
+## Architecture
 
-### Installation
+```
+                        ┌─ tables ───────────────► DuckDB (filing_tables, exact lookup)
+PDF ──► LlamaParse ─────┤                                       │
+                        ├─ page sizes ───────────► DuckDB (document_pages)
+                        │                                       │
+                        └─ narrative markdown ──► parent/child chunking
+                                                    ├─ parents ► parent_store/ (JSON files)
+                                                    └─ children ► Qdrant (dense + BM25 hybrid)
 
-Install all required dependencies with `pip`:
-
-```bash
-pip install -r requirements.txt
+Question ──► LangGraph agent ──► tools: search_filing_tables ─────► DuckDB
+                                        search_child_chunks ─────► Qdrant
+                                        retrieve_parent_chunks ──► parent_store/
+                         └─► answer + Sources + citations (source, page, bbox)
 ```
 
-Or use `uv`:
+Key design decisions:
 
-```bash
-uv venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-uv pip install -r requirements.txt
-```
-
-### Running the Application
-
-Start the Gradio interface locally:
-
-```bash
-python project/app.py
-```
-
-The application will be available at `http://localhost:7860` (default Gradio port).
-
-> This in-memory demo is intended for one local user. Deployments serving multiple users should assign a separate LangGraph thread ID per session.
-
-### Prerequisites
-
-- Python 3.11+
-- Ollama (local) or API keys for OpenAI, Anthropic, or Google
+- **Tables and narrative are stored separately.** Financial tables go to DuckDB as whole tables (markdown + CSV) so figures are exact lookups rather than fuzzy embedding matches. Narrative text is chunked and embedded for semantic search. Tables are excluded from the narrative markdown, so the text splitter can never cut a table in half.
+- **Parent/child chunking.** Small child chunks (500 characters) are searched; each links to a larger parent chunk (2,000 to 4,000 characters) the agent can fetch for context.
+- **Hybrid retrieval.** Qdrant combines dense embeddings (`Qwen/Qwen3-Embedding-0.6B`) with sparse BM25 (`Qdrant/bm25`).
+- **Citations come from tool results, never from LLM text.** See [Citation Tracking](#citation-tracking).
 
 ---
 
-## Architecture Overview
+## Ingestion Pipeline
 
-This system implements an advanced RAG pipeline with the following key features:
+`FinancialIngestionPipeline` (`ingestion/pipeline.py`) runs per PDF:
 
-- **Financial Document Ingestion**: PDFs are parsed with LlamaParse (agentic tier, tuned for financial statements), falling back to Docling if LlamaParse is unavailable or fails
-- **Table/Narrative Split**: Extracted tables (balance sheets, income statements, etc.) are stored as structured rows in DuckDB for exact lookup; narrative text is chunked and indexed for semantic search — so "what was net income in Q2FY2024" doesn't depend on a fuzzy embedding match
-- **Parent-Child Chunking**: Documents are split into small child chunks (for precise retrieval) linked to larger parent chunks (for rich context)
-- **Hybrid Search**: Combines dense embeddings and sparse (BM25) retrieval for optimal results
-- **LangGraph Agent**: Orchestrates query rewriting, retrieval, and response generation
-- **Citation Tracking**: Every answer's citations (source file, page, table bounding box) are captured from actual tool-call results — never parsed from the LLM's generated text — accumulated across the agent's run, and reconciled against the sources the LLM itself cites before being attached to the final answer. See [Citation Tracking](#citation-tracking) for the full design.
-- **Compact Chat Memory**: Rewrites follow-ups using both a rolling summary and bounded recent conversation history
-- **Clarification Memory**: Preserves an unresolved query across human-in-the-loop pauses, combines its clarifications, then discards those temporary replies after the answer
-- **Provider Customization Path**: The runnable app uses Ollama by default, with built-in support for Google Gemini and documented examples for adapting it to OpenAI or Anthropic Claude
-- **Vector Storage**: Uses Qdrant for efficient similarity search
+1. **Parse** with `DocumentParser` (`ingestion/parsers.py`). LlamaParse (agentic tier, with a prompt tuned for financial statements) is the primary parser. Docling is an optional fallback, disabled by default (`DOCLING_ENABLED = False`).
+2. **Split the result.** Each page item is either narrative or a table:
+   - Narrative items become markdown, with a `<!--page:N-->` marker at the start of each page.
+   - `table` and `chart` items (LlamaParse sometimes labels tables as charts) become `ParsedTable` records: markdown, CSV, page number, and bounding box (`bbox_x/y/w/h`, taken from the region labelled `table` or `chart`).
+   - Each table's caption is built from the consecutive run of heading items that precedes it (headings in these filings are flat, so level-based nesting is not used). If there is no heading, the caption falls back to `Table (page N)`.
+   - Each page's width and height are recorded.
+3. **Store tables and page sizes** in DuckDB.
+4. **Copy the source PDF** into `PDF_DIR` so pages can be rendered later for citations.
+5. **Write the narrative markdown** to `MARKDOWN_DIR`, chunk it (`document_chunker.py`), save parents to the parent store and index children in Qdrant.
+6. **Roll back on failure.** If any step fails, the DuckDB rows, the markdown file and the copied PDF for that document are removed so the upload can be retried. A failure in one file does not stop the rest of a batch.
 
-### Data Flow
+`DocumentManager` (`core/document_manager.py`) is the entry point used by the API. PDFs go through the pipeline above. Plain `.md` uploads skip parsing and table extraction and are chunked directly (they therefore have no page numbers). A document whose markdown file already exists is skipped (duplicate detection is by filename only).
 
-```  ┌─ Tables → DuckDB (exact structured lookup, incl. page + bbox) --------┐
-PDF                                                                         ▼
-     └─ → Markdown Conversion → Parent/Child Chunking → Vector Indexing → Agent Retrieval → LLM Response
-```
+### Chunking
 
-Agent Retrieval surfaces three tools — `search_child_chunks`, `retrieve_parent_chunks`, and `search_filing_tables` (the last giving the agent read access to the DuckDB table store). Each tool pairs the text handed to the LLM with a structured citation (source file, page, and bounding box for tables), captured separately from that text — see [Citation Tracking](#citation-tracking).
+`DocumentChunker` splits markdown on `#`, `##`, `###` headers, merges parents smaller than `MIN_PARENT_SIZE`, splits parents larger than `MAX_PARENT_SIZE`, and rebalances small neighbours. Page markers are read from each parent to set `page_start` and `page_end` metadata, then stripped from the text. Child chunks inherit their parent's page range.
+
+---
+
+## Agent Graph
+
+The agent is a LangGraph state graph (`rag_agent/graph.py`) with an in-memory checkpointer keyed by `thread_id`.
+
+**Main graph**
+
+| Node | Role |
+|------|------|
+| `summarize_history` | Folds older conversation turns into a rolling summary; keeps the last few raw messages (`MAIN_HISTORY_MESSAGES_TO_KEEP`) |
+| `rewrite_query` | Rewrites the question into one or more self-contained questions (structured output: `QueryAnalysis`), or decides it needs clarification |
+| `request_clarification` | Interrupt point. The graph pauses here (`interrupt_before`) until the user replies; the unresolved question and replies are combined on the next pass |
+| `agent` (subgraph) | One run per rewritten question, fanned out in parallel with `Send()` |
+| `aggregate_answers` | Synthesises the sub-answers into one reply and reconciles citations |
+
+**Agent subgraph**: `orchestrator` (LLM with tools) → `tools` → `should_compress_context` → back to `orchestrator`, until the LLM answers or a limit is reached. `compress_context` summarises and prunes old tool messages when the context grows past a token threshold. `fallback_response` produces a best-effort answer if iteration or tool-call limits (`MAX_ITERATIONS`, `MAX_TOOL_CALLS`) are hit. `collect_answer` packages the result.
+
+**Tools** (`rag_agent/tools.py`)
+
+| Tool | Source | Use |
+|------|--------|-----|
+| `search_filing_tables(source, caption_contains)` | DuckDB | Exact figures from financial statements. Returns whole matching tables |
+| `search_child_chunks(query, limit)` | Qdrant | Hybrid search over narrative text |
+| `retrieve_parent_chunks(parent_id)` | Parent store | Fuller context for a relevant child result |
+
+Each tool returns `(content, citations)`. The content goes to the LLM; the citations travel separately.
+
+**LLM providers** (`core/rag_system.py`): Ollama (default model `granite4.1:8b`) and Google Gemini. The active provider is `LLM_PROVIDER` in `config.py` and can be changed at runtime through the API. Gemini can return message content as a list of parts instead of a string; `LLMContentNormalizer` (`core/llm_content.py`) flattens it to text everywhere content is concatenated.
+
+**Prompts** (`rag_agent/prompts.py`) cover summarisation, query rewriting, the orchestrator (tool routing and guardrails against freehand valuation arithmetic), fallback, context compression and aggregation. The aggregation prompt requires a `Sources:` list of filenames.
 
 ---
 
 ## Citation Tracking
 
-Financial answers need to be traceable back to the exact page — and, for tables, the exact region of that page — they came from. A plain "answer + source filename" isn't enough for someone deciding whether to trust a number. This is being built in phases; Phases 1–3 are done.
+Every answer carries structured citations so a user can see exactly where a figure came from.
 
-### Phase 1 — Page-level provenance at ingestion time
+1. **Capture at ingestion.** Table pages and bounding boxes, plus each page's width and height, are stored in DuckDB; the source PDF is kept on disk.
+2. **Capture at retrieval.** Tools are registered with `response_format="content_and_artifact"`. The citation list rides on `ToolMessage.artifact`, never in the text the LLM sees, so the model cannot invent a citation.
+3. **Accumulate.** `AgentState.citations` uses a de-duplicating reducer (`accumulate_citations`). A reducer on state, rather than recomputing from messages, is needed because `compress_context` deletes old tool messages.
+4. **Reconcile.** `aggregate_answers` parses the LLM's own `Sources:` block and keeps only citations whose `source` filename appears in it. This is deliberately fail-closed: if the LLM omits or malforms the block, no citations are returned.
+5. **Serve.** `POST /api/chat` returns `citations` and `sources`; `GET /api/citations/.../image` returns the rendered page so the frontend can draw the box.
 
-`DocumentParser` (`ingestion/parsers.py`) and `FinancialIngestionPipeline` (`ingestion/pipeline.py`) now persist, per ingested PDF:
-- a copy of the original PDF itself, so a page can later be rasterized on demand
-- each page's width/height, stored in a new `document_pages` table in DuckDB (`source`, `page`, `width`, `height`, primary key `(source, page)`)
+Citation shapes:
 
-This is pure plumbing with no retrieval-facing behavior yet — it exists so a bounding box captured during parsing can later be mapped onto a rendered page image.
+| `kind` | Fields |
+|--------|--------|
+| `table` | `source`, `page`, `caption`, `bbox_x`, `bbox_y`, `bbox_w`, `bbox_h` |
+| `narrative` | `source`, `parent_id`, `page_start`, `page_end` (no bounding box) |
 
-### Phase 2 — Structured citations from tool results, not from LLM text
+Bounding boxes and the stored page width and height share LlamaParse's coordinate space, which is not the rendered image's pixel size. The page-image endpoint returns both so the frontend can scale (see below).
 
-The single most important design decision: citations are captured from the **actual tool-call results** the agent used, never parsed out of the LLM's generated answer. Parsing citations from free text would let the model assert a source it never actually retrieved from.
+---
 
-All three retrieval tools in `rag_agent/tools.py` — `search_child_chunks`, `retrieve_parent_chunks`, `search_filing_tables` — are registered with LangChain's `response_format="content_and_artifact"` and return `(content, citations)` tuples. The `content` string is what the LLM sees; the `citations` list (source file, page, parent/chunk id, table caption, bounding box where applicable) is attached to the resulting `ToolMessage.artifact` and never shown to the LLM directly.
+## REST API
 
-`rag_agent/graph_state.py` adds a `citations` field to `AgentState`, accumulated across the subgraph's run with a dedicated reducer (`accumulate_citations`) that de-duplicates by `(kind, source, parent_id, page, page_start, page_end)`. A dedicated reducer is needed because `compress_context` prunes older `ToolMessage`s out of `state["messages"]` as the conversation grows — without separately accumulated state, citations from earlier tool calls would be silently lost once their originating message is pruned.
+FastAPI app in `main.py`; routers in `api/routers/`; all routes are under `/api`. Interactive docs are at `/docs` when running.
 
-`rag_agent/nodes.py` harvests citations from any newly-produced `ToolMessage`s each time `should_compress_context` runs, and `collect_answer` carries the accumulated list into each subgraph's final answer.
+| Method | Path | Purpose |
+|--------|------|---------|
+| `GET` | `/api/health` | Liveness check |
+| `POST` | `/api/chat` | Ask a question |
+| `POST` | `/api/documents` | Upload files (async job) |
+| `GET` | `/api/documents/jobs/{job_id}` | Poll an upload job |
+| `GET` | `/api/documents` | List ingested documents |
+| `DELETE` | `/api/documents/{name}` | Delete one document from every store |
+| `DELETE` | `/api/documents/{name}` | Delete one document from every store |
+| `POST` | `/api/documents/clear` | Delete all ingested data |
+| `GET` | `/api/config/llm` | Current provider and model |
+| `POST` | `/api/config/llm` | Switch provider/model |
+| `GET` | `/api/citations/{source}/pages/{page}/image` | Rendered page PNG |
 
-### Phase 3 — Reconciling citations against what the LLM actually cites
+### Chat
 
-A subgraph's `citations` list reflects everything it *retrieved*, not necessarily everything it *used* in the final synthesized answer — an agent might call a tool, decide the result isn't relevant, and not reference it. `aggregate_answers` parses the LLM's own self-reported `Sources:` list out of the synthesized answer text and keeps only the citations whose `source` filename appears there, discarding the rest.
-
-This is a deliberate fail-closed tradeoff: if the LLM's `Sources:` section ever deviates from the expected format, citations are dropped entirely rather than shown un-reconciled. The final `AIMessage` carries the reconciled result in `additional_kwargs`:
-
-```python
-additional_kwargs = {
-    "citations": reconciled_citations,  # list of citation dicts (source, page, bbox, etc.)
-    "sources": sorted(cited_sources),   # filenames, deduplicated
-}
+```
+POST /api/chat   { "message": "...", "thread_id": "optional" }
+→ { "thread_id", "answer", "sources": [...], "citations": [...], "needs_clarification": false }
 ```
 
-### What's not built yet
+Omit `thread_id` on the first message and reuse the returned one afterwards. If `needs_clarification` is true, `answer` is a clarifying question; the next message on the same thread answers it. The call is a single request/response (no streaming).
 
-Phases 4–6 — surfacing citations through an API response, a clickable UI affordance, and rendering the PDF page with the bounding box drawn on it — are still in progress and not reflected in this document yet.
+### Documents
+
+Uploading is asynchronous because parsing can take a minute or more.
+
+```bash
+curl -X POST http://localhost:8000/api/documents -F "files=@/path/to/filing.pdf"
+# 202 → { "job_id": "...", "status": "pending" }
+
+curl http://localhost:8000/api/documents/jobs/<job_id>
+# → { "status": "pending|running|done|error", "added", "skipped", "documents": [...], "error": null }
+```
+
+The multipart field must be named `files` (repeatable). Ingestion runs on a background worker thread, so the server stays responsive. Clients should poll until `done` before querying the new document. Job state lives in memory and is lost on restart.
+
+**Deleting one document.** `DELETE /api/documents/{name}` (use a name from `GET /api/documents`) removes it from every store: Qdrant child chunks (filtered on `metadata.source`), parent-store JSON files, DuckDB tables and page sizes, the markdown file and the stored PDF. It returns `{ "deleted", "child_chunks", "parent_chunks", "tables" }` (counts removed), 404 if the name isn't ingested, and 400 if it isn't a bare filename. The parent store is cleared last because the document list is derived from it: if a step fails, the document stays listed and the delete can be retried (every step is idempotent). Once deleted, the same filename can be uploaded again.
+
+### Deleting documents
+
+```
+DELETE /api/documents/{name}      (name = the filename shown by GET /api/documents, URL-encoded)
+→ { "deleted": "filing.pdf", "child_chunks": 120, "parent_chunks": 18, "tables": 6 }
+```
+
+Removes the document from every store: Qdrant child chunks (filter on `metadata.source`), parent chunks, DuckDB tables and page dimensions, the saved PDF, and the markdown file. The parent store is cleared last because the document list is built from it; if a step fails the response is a 500, the document stays listed, and the delete can be retried (every step is idempotent). Responses: `404` unknown document, `400` name is not a bare filename, `409` an ingestion is running. `POST /documents/clear` also returns 409 while an ingestion is running.
+
+### LLM configuration
+
+```
+POST /api/config/llm   { "provider": "ollama" | "gemini", "model": "...", "api_key": "optional, gemini only" }
+→ { "provider", "model", "has_api_key" }
+```
+
+The key is held in the process environment (`GOOGLE_API_KEY`) for the life of the process and is never returned or written to disk; `has_api_key` only reports whether one is set. Changes are in-memory and revert to `config.py` on restart. Switching rebuilds the agent graph, which creates a new checkpointer, so **all in-progress conversations are dropped**.
+
+### Page images
+
+```
+GET /api/citations/{source}/pages/{page}/image?dpi=150
+```
+
+Returns a PNG plus headers `X-Page-Width`, `X-Page-Height` (the bbox coordinate space) and `X-Rendered-Width`, `X-Rendered-Height` (actual pixels). Scale a citation's box with `scaleX = X-Rendered-Width / X-Page-Width` (likewise Y). `page` accepts `1` or `1.0`. `dpi` is clamped to 72 to 300. Returns 404 if the PDF or the page's stored dimensions are missing (for example, documents ingested before page dimensions were recorded).
+
+CORS allows `http://localhost:5173` (edit in `main.py`) and exposes the four `X-*` headers.
 
 ---
 
 ## Project Structure
 
-### Entry Point & Configuration
+```
+main.py                      FastAPI app: lifespan builds RAGSystem + DocumentManager once
+config.py                    Central configuration
+document_chunker.py          Parent/child chunking, page-range annotation
+utils.py                     Directory helpers, token estimation (tiktoken), pymupdf helpers
 
-| File | Purpose |
-|------|---------|
-| `project/app.py` | Application entry point, launches Gradio UI |
-| `project/config.py` | **Central configuration hub** - edit this for provider/model/chunking changes |
-| `project/utils.py` | PDF conversion and cached context-token estimation with an offline-safe fallback |
-| `project/document_chunker.py` | Parent/child splitting logic with cleaning and merging rules |
-| `project/Dockerfile` | Dockerfile with Ollama for local deployment |
+api/
+  deps.py                    Depends() accessors for the shared RAGSystem / DocumentManager
+  schemas.py                 Pydantic request/response models
+  routers/
+    chat.py                  POST /chat
+    documents.py             Upload jobs, list, delete one, clear all
+    config.py                LLM provider configuration
+    citations.py             Page image rendering
 
-### Core System
+core/
+  rag_system.py              Builds managers, LLM and agent graph; reconfigure_llm()
+  document_manager.py        Routes uploads (PDF → pipeline, .md → direct chunking); delete one / clear all; ingestion lock
+  llm_content.py             LLMContentNormalizer (provider content shapes → str)
+  execution_logger.py        Optional colourised graph/tool tracing to the terminal
+  observability.py           Optional Langfuse tracing
 
-| File | Purpose |
-|------|---------|
-| `project/core/rag_system.py` | System bootstrap - creates managers (including a single shared `DuckDBManager` used by both the ingestion pipeline and the agent's tools) and compiles the LangGraph agent; supports Ollama (default) and Google Gemini |
-| `project/core/document_manager.py` | Routes uploads by type: PDFs go to FinancialIngestionPipeline; plain .md files are chunked and indexed directly, skipping parsing/table extraction |
-| `project/core/chat_interface.py` | Streams the aggregated answer while separating query analysis and tool activity from internal node output |
-| `project/core/llm_content.py` | `LLMContentNormalizer` — normalizes LLM output across providers; Gemini can return `AIMessage.content` as a list of content-part dicts instead of a plain string, which this flattens to text at every concatenation site |
-| `project/core/observability.py` | Optional Langfuse tracing — callback handler lifecycle |
+ingestion/
+  parsers.py                 LlamaParse / Docling parsing, table + page-size extraction
+  pipeline.py                FinancialIngestionPipeline
+  test_ingest.py             CLI to run ingestion on PDFs directly
+  test_duckdb.py             DuckDB check script
+  metadata_extractor.py      Filename-based metadata heuristic (currently unused)
 
-### Ingestion Pipeline
+db/
+  vector_db_manager.py       Qdrant client, embeddings, hybrid vector store (incl. delete by source)
+  parent_store_manager.py    JSON-file store for parent chunks (incl. delete by source)
+  duckdb_manager.py          filing_tables and document_pages
 
-| File | Purpose |
-|------|---------|
-| `project/ingestion/pipeline.py` | FinancialIngestionPipeline — orchestrates parse → table storage → chunk → index for each PDF; persists a copy of the source PDF and each page's dimensions for later citation rendering; continues past per-file failures and reports them |
-| `project/ingestion/parsers.py` | DocumentParser — LlamaParse (primary) with Docling fallback; splits a parsed result into narrative markdown (with embedded page markers) and structured ParsedTable objects, including per-table bounding boxes and per-page dimensions |
+rag_agent/
+  graph.py                   Graph construction and compilation
+  graph_state.py             State schemas and reducers (incl. citations)
+  nodes.py                   Node implementations
+  edges.py                   Routing (clarification, tool loop, fallback)
+  tools.py                   The three retrieval tools
+  prompts.py                 All system prompts
+  schemas.py                 QueryAnalysis structured output
+```
 
-### Database Layer
+### DuckDB schema
 
-| File | Purpose |
-|------|---------|
-| `project/db/vector_db_manager.py` | Qdrant client wrapper with embedding initialization |
-| `project/db/parent_store_manager.py` | File-backed storage for parent chunks |
-| `project/db/duckdb_manager.py` | DuckDBManager — structured store for extracted tables (`filing_tables`) and per-page dimensions (`document_pages`, used for citation rendering); schema setup no longer drops existing tables on every restart |
-
-### RAG Agent (LangGraph)
-
-| File | Purpose |
-|------|---------|
-| `project/rag_agent/graph.py` | Graph builder and compilation logic |
-| `project/rag_agent/graph_state.py` | Shared and per-agent state, including rolling memory, pending clarification, answer accumulation/reset logic, and accumulated per-subgraph `citations` |
-| `project/rag_agent/nodes.py` | Node implementations (summarize, rewrite, agent execution, aggregate); harvests citations from tool results and reconciles them against the LLM's self-reported sources in `aggregate_answers` |
-| `project/rag_agent/edges.py` | Conditional edge routing logic (e.g., routing based on query clarity) |
-| `project/rag_agent/tools.py` | Retrieval tools — `search_child_chunks`, `retrieve_parent_chunks`, `search_filing_tables` (gives the agent read access to the DuckDB table store); all three return `(content, citations)` via `response_format="content_and_artifact"` |
-| `project/rag_agent/prompts.py` | System prompts for agent behavior |
-| `project/rag_agent/schemas.py` | Structured output schemas (Pydantic models) |
-
-### User Interface
-
-| File | Purpose |
-|------|---------|
-| `project/ui/css.py` | Custom CSS styling for the Gradio interface |
-| `project/ui/gradio_app.py` | Gradio UI implementation with document upload and chat |
+`filing_tables`: `id`, `source`, `metadata`, `table_markdown`, `table_csv`, `table_caption`, `page`, `bbox_x`, `bbox_y`, `bbox_w`, `bbox_h`.
+`document_pages`: `source`, `page`, `width`, `height` (primary key `source, page`).
+Schema creation is non-destructive: existing data survives restarts. `delete_by_source` removes a document's tables and page dimensions.
 
 ---
 
-## Configuration Guide
+## Configuration
 
-All primary settings are in `project/config.py`. Key parameters:
+Settings are in `config.py`. Secrets come from environment variables (a `.env` file is loaded automatically).
 
-### Directory Configuration
+**Environment variables**
 
-```python
-MARKDOWN_DIR = "markdown_docs"        # Storage for converted PDF → Markdown files
-PARENT_STORE_PATH = "parent_store"    # File-backed storage for parent chunks
-QDRANT_DB_PATH = "qdrant_db"          # Local Qdrant vector database path
-DUCKDB_PATH = "duckdb/filings.duckdb" # Structured store for tables and per-page dimensions
-PDF_DIR = "source_pdfs"               # Stores a copy of each ingested PDF, for citation rendering
-```
+| Variable | Purpose |
+|----------|---------|
+| `LLAMA_CLOUD_API_KEY` | LlamaParse (required to ingest PDFs unless Docling is enabled) |
+| `GOOGLE_API_KEY` | Gemini (can also be set at runtime via the API) |
+| `HF_TOKEN` | Optional Hugging Face token for model downloads |
+| `LANGFUSE_ENABLED`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_BASE_URL` | Optional tracing |
 
-### Qdrant Configuration
+**Key settings**
 
-```python
-CHILD_COLLECTION = "document_child_chunks"  # Collection name for child chunks
-SPARSE_VECTOR_NAME = "sparse"               # Named sparse vector field (BM25)
-```
+| Setting | Default | Meaning |
+|---------|---------|---------|
+| `LLM_PROVIDER` | `"gemini"` | `"gemini"` or anything else for Ollama |
+| `GEMINI_MODEL` / `LLM_MODEL` | `gemini-3.1-flash-lite` / `granite4.1:8b` | Model per provider |
+| `LLM_TEMPERATURE`, `LLM_SEED` | `0`, `42` | Generation settings |
+| `DENSE_MODEL`, `SPARSE_MODEL` | `Qwen/Qwen3-Embedding-0.6B`, `Qdrant/bm25` | Embeddings |
+| `CHILD_CHUNK_SIZE` / `CHILD_CHUNK_OVERLAP` | `500` / `100` | Child chunking |
+| `MIN_PARENT_SIZE` / `MAX_PARENT_SIZE` | `2000` / `4000` | Parent chunking |
+| `RETRIEVAL_SCORE_THRESHOLD`, `DEFAULT_RETRIEVAL_K` | `0.4`, `7` | Retrieval |
+| `MAX_TOOL_CALLS`, `MAX_ITERATIONS`, `GRAPH_RECURSION_LIMIT` | `8`, `10`, `50` | Agent loop limits |
+| `MAIN_HISTORY_MESSAGES_TO_KEEP` | `4` | Raw messages kept between turns (minimum 2) |
+| `BASE_TOKEN_THRESHOLD`, `TOKEN_GROWTH_FACTOR` | `2000`, `0.9` | Context compression |
+| `DOCLING_ENABLED` | `False` | Docling fallback parser |
+| `EXECUTION_LOGGING_ENABLED` | `False` | Terminal tracing of graph steps and tools |
 
-### Model Configuration
-
-```python
-# Default: single model configuration
-DENSE_MODEL = "Qwen/Qwen3-Embedding-0.6B"
-SPARSE_MODEL = "Qdrant/bm25"
-LLM_MODEL = "granite4.1:8b"
-JUDGE_MODEL = "ministral-3:3b-instruct-2512-q8_0"
-LLM_TEMPERATURE = 0  # 0 = deterministic, 1 = creative
-LLM_SEED = 42
-```
-
-> The agent has also been run against Google's free-tier Gemini models (Flash/Flash-Lite) as an alternative to Ollama, confirmed working end-to-end including citation tracking. See [Common Customizations → Switching LLM Provider](#common-customizations) for how to point the system at a different provider.
-
-### Retrieval Configuration
-
-```python
-RETRIEVAL_SCORE_THRESHOLD = 0.4  # Lower = more recall, higher = more precision
-DEFAULT_RETRIEVAL_K = 7          # Default number of child chunks used by retrieval and evaluation
-CHILD_CHUNK_SEPARATOR = "\n\n<CHILD_CHUNK_BOUNDARY>\n\n"  # Keeps ranked child results separable for evaluation
-```
-
-### Agent Configuration
-```python
-# Hard limits to prevent infinite loops
-MAX_TOOL_CALLS = 8       # Maximum tool calls per agent run
-MAX_ITERATIONS = 10      # Maximum agent loop iterations
-GRAPH_RECURSION_LIMIT = 50 # Maximum number of steps before hitting a stop condition
-MAIN_HISTORY_MESSAGES_TO_KEEP = 4  # Raw messages retained after each answer; minimum 2
-
-# Context compression thresholds
-BASE_TOKEN_THRESHOLD = 2000     # Initial token threshold for compression
-TOKEN_GROWTH_FACTOR = 0.9       # Multiplier applied after each compression
-```
-
-### Terminal Execution Logging
-
-```python
-EXECUTION_LOGGING_ENABLED = False  # Print graph steps, state previews, tool calls, and outputs
-EXECUTION_LOG_MAX_CHARS = 1200     # Maximum characters shown for long values
-EXECUTION_LOG_USE_COLOR = True     # Use ANSI colors in the terminal
-```
-
-### Text Splitter Configuration
-
-```python
-CHILD_CHUNK_SIZE = 500              # Size of chunks used for retrieval
-CHILD_CHUNK_OVERLAP = 100           # Overlap between chunks (prevents context loss)
-MIN_PARENT_SIZE = 2000              # Target minimum; very short documents may remain smaller
-MAX_PARENT_SIZE = 4000             # Maximum parent chunk size
-
-# Markdown header splitting strategy
-HEADERS_TO_SPLIT_ON = [
-    ("#", "H1"),
-    ("##", "H2"),
-    ("###", "H3")
-]
-```
-
-### Langfuse Observability (Optional)
-
-```python
-import os
-
-LANGFUSE_ENABLED = os.environ.get("LANGFUSE_ENABLED", "false").lower() == "true"
-LANGFUSE_PUBLIC_KEY = ""               # From your Langfuse project settings
-LANGFUSE_SECRET_KEY = ""               # From your Langfuse project settings
-LANGFUSE_BASE_URL = "http://localhost:3000"  # Langfuse Cloud or self-hosted URL
-```
+**Data directories** (`MARKDOWN_DIR`, `PDF_DIR`, `PARENT_STORE_PATH`, `QDRANT_DB_PATH`, `DUCKDB_PATH`) are resolved relative to the **parent of the directory containing `config.py`**, not the repository root: `markdown_docs/`, `source_docs/`, `parent_store/`, `qdrant_db/`, `duckdb/filings.duckdb`. Changing the embedding model requires clearing and re-indexing, because the Qdrant vector size must match (startup raises a clear error otherwise).
 
 ---
 
-## Common Customizations
+## Setup and Running
 
-### 1. Switching LLM Provider (Single Provider)
-
-> **Performance Note:** LLMs with 8B+ parameters typically offer superior reasoning, context comprehension, and response quality compared to smaller models. This applies to both proprietary and open-source models, as long as they **support native tool/function calling,** which is required for agentic RAG workflows.
-
-If you want to permanently switch from one provider to another (e.g., Ollama → Google Gemini), follow these steps:
-
-**Step 1:** Install the provider's SDK
+There is no `requirements.txt` in the repository at present. The code imports: `fastapi`, `uvicorn`, `python-multipart`, `pydantic`, `langgraph`, `langchain-core`, `langchain-text-splitters`, `langchain-huggingface`, `langchain-qdrant`, `langchain-ollama`, `langchain-google-genai` (for Gemini), `qdrant-client`, `fastembed`, `duckdb`, `pandas`, `pymupdf`, `pymupdf4llm`, `llama-cloud`, `tiktoken`, `python-dotenv`, and optionally `langfuse` and `docling`. Python 3.11+ (the repository was developed on 3.11).
 
 ```bash
-pip install langchain-google-genai
+# 1. create .env
+LLAMA_CLOUD_API_KEY=...
+GOOGLE_API_KEY=...          # if using Gemini
+
+# 2. run (from the repository root)
+uvicorn main:app --reload --port 8000
 ```
 
-**Step 2:** Set environment variable
+Startup (the FastAPI lifespan) loads the embedding model, connects to Qdrant and DuckDB, and compiles the agent graph, so it takes a few seconds. The chat LLM is not loaded at startup: Gemini needs no local weights, and Ollama loads its model on the first request. For Ollama, run `ollama serve` and pull the configured model first.
+
+Typical first session:
 
 ```bash
-export GOOGLE_API_KEY="your-google-key"
+curl -X POST http://localhost:8000/api/documents -F "files=@filing.pdf"      # get job_id
+curl http://localhost:8000/api/documents/jobs/<job_id>                        # until "done"
+curl -X POST http://localhost:8000/api/chat -H "Content-Type: application/json" \
+     -d '{"message": "What was the gross profit for the six months?"}'
 ```
-
-**Step 3:** Update `project/config.py`
-
-```python
-LLM_MODEL = "gemini-2.5-pro"
-LLM_TEMPERATURE = 0
-LLM_SEED = 42
-```
-
-**Step 4:** Modify `project/core/rag_system.py`
-
-Replace:
-
-```python
-llm = ChatOllama(model=config.LLM_MODEL, temperature=config.LLM_TEMPERATURE, seed=config.LLM_SEED)
-```
-
-With:
-
-```python
-from langchain_google_genai import ChatGoogleGenerativeAI
-
-llm = ChatGoogleGenerativeAI(model=config.LLM_MODEL, temperature=config.LLM_TEMPERATURE)
-```
-
-> **Note:** Gemini can return `AIMessage.content` as a list of content-part dicts instead of a plain string. This is already handled by `LLMContentNormalizer` (`project/core/llm_content.py`) — no extra work needed when switching providers.
-
-### 2. Optional Multi-Provider Configuration
-
-The repository ships with an Ollama-first implementation. Use this section if you want to extend `project/core/rag_system.py` into a provider factory.
-
-This approach allows you to maintain multiple provider configurations and switch between them easily.
-
-**Step 1:** Install required SDKs
-
-```bash
-pip install langchain-openai langchain-anthropic langchain-google-genai
-```
-
-**Step 2:** Set environment variables
-
-```bash
-export OPENAI_API_KEY="your-openai-key"
-export ANTHROPIC_API_KEY="your-anthropic-key"
-export GOOGLE_API_KEY="your-google-key"
-```
-
-**Step 3:** Update `project/config.py` with multi-provider configuration
-
-```python
-# --- Multi-Provider LLM Configuration ---
-LLM_CONFIGS = {
-    "ollama": {
-        "model": "granite4.1:8b",
-        "url":"http://localhost:11434",
-        "temperature": 0
-    },
-    "openai": {
-        "model": "gpt-5.2",
-        "temperature": 0
-    },
-    "anthropic": {
-        "model": "claude-sonnet-4-6",
-        "temperature": 0
-    },
-    "google": {
-        "model": "gemini-2.5-flash",
-        "temperature": 0
-    }
-}
-
-# Switch providers by changing this single line
-ACTIVE_LLM_CONFIG = "ollama"
-```
-
-**Step 4:** Modify `project/core/rag_system.py` in the `initialize()` method
-
-Replace the existing LLM initialization with:
-
-```python
-def initialize(self):
-    self.vector_db.create_collection(self.collection_name)
-    collection = self.vector_db.get_collection(self.collection_name)
-    
-    # Load active configuration
-    active_config = config.LLM_CONFIGS[config.ACTIVE_LLM_CONFIG]
-    model = active_config["model"]
-    temperature = active_config["temperature"]
-    
-    if config.ACTIVE_LLM_CONFIG == "ollama":
-        from langchain_ollama import ChatOllama
-        llm = ChatOllama(model=model, temperature=temperature, base_url=active_config["url"])
-        
-    elif config.ACTIVE_LLM_CONFIG == "openai":
-        from langchain_openai import ChatOpenAI
-        llm = ChatOpenAI(model=model, temperature=temperature)
-        
-    elif config.ACTIVE_LLM_CONFIG == "anthropic":
-        from langchain_anthropic import ChatAnthropic
-        llm = ChatAnthropic(model=model, temperature=temperature)
-        
-    elif config.ACTIVE_LLM_CONFIG == "google":
-        from langchain_google_genai import ChatGoogleGenerativeAI
-        llm = ChatGoogleGenerativeAI(model=model, temperature=temperature)
-        
-    else:
-        raise ValueError(f"Unsupported LLM provider: {config.ACTIVE_LLM_CONFIG}")
-    
-    # Continue with tool and graph initialization
-    tools = ToolFactory(collection, self.duckdb).create_tools()
-    self.agent_graph = create_agent_graph(llm, tools)
-```
-
-**Switching Providers:** Simply change `ACTIVE_LLM_CONFIG` in `config.py`:
-
-```python
-ACTIVE_LLM_CONFIG = "google"  # Switch to Gemini Pro
-# ACTIVE_LLM_CONFIG = "anthropic"  # Or Claude Sonnet
-# ACTIVE_LLM_CONFIG = "openai"  # Or GPT-4o
-```
-
----
-
-**Provider Reference Table:**
-
-| Provider | Environment Variable | Import Statement | Example Models |
-|----------|---------------------|------------------|----------------|
-| OpenAI | `OPENAI_API_KEY` | `from langchain_openai import ChatOpenAI` | `gpt-5.2`, `gpt-5-mini` |
-| Anthropic | `ANTHROPIC_API_KEY` | `from langchain_anthropic import ChatAnthropic` | `claude-opus-4-6`, `claude-sonnet-4-6` |
-| Google | `GOOGLE_API_KEY` | `from langchain_google_genai import ChatGoogleGenerativeAI` | `gemini-2.5-pro`, `gemini-2.5-flash` |
-| Ollama | None (local) | `from langchain_ollama import ChatOllama` | `granite4.1:8b`, `llama3.1:8b-instruct-q6_K` |
-
----
-
-### 3. Changing Embedding Models
-
-**Why change?** Trade-offs between speed, cost, and quality.
-
-**Step 1:** Update `project/config.py`
-
-```python
-# Example: Faster, smaller model
-DENSE_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-
-# Example: Alternative Sentence Transformers model
-# DENSE_MODEL = "sentence-transformers/all-mpnet-base-v2"
-
-# Example: Gemma embeddings (Google's open model)
-# DENSE_MODEL = "google/embeddinggemma-300m"
-
-# Default: Qwen embeddings (Alibaba's multilingual model)
-# DENSE_MODEL = "Qwen/Qwen3-Embedding-0.6B"
-
-SPARSE_MODEL = "Qdrant/bm25"  # Usually no need to change
-```
-
-**Step 2:** Re-index your documents
-
-⚠️ **Important:** Changing embeddings requires re-indexing. In the educational UI, use **Clear All**, restart if the old collection prevents startup, then upload the documents again.
-
-**Implementation Details** (in `project/db/vector_db_manager.py`):
-
-```python
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_qdrant import FastEmbedSparse
-import config
-
-self.__dense_embeddings = HuggingFaceEmbeddings(model_name=config.DENSE_MODEL)
-self.__sparse_embeddings = FastEmbedSparse(model_name=config.SPARSE_MODEL)
-```
-
-**Popular Embedding Models:**
-
-| Model | Context Size | Vector Dimension | Speed | Quality | Use Case |
-|-------|--------------|------------------|-------|---------|----------|
-| all-MiniLM-L6-v2 | 256 tokens | 384 | Fast | Good | General purpose, quick semantic similarity |
-| all-mpnet-base-v2 | 512 tokens | 768 | Medium | Excellent | High-accuracy semantic search |
-| bge-large-en-v1.5 | 512 tokens | 1024 | Slow | Best | Production-grade retrieval on GPU |
-| google/embeddinggemma-300m | 2048 tokens | 768 | Fast | Very Good | Lightweight, efficient multilingual retrieval |
-| Qwen/Qwen3-Embedding-0.6B | 32768 tokens | 1024 | Medium | Excellent | Default multilingual/code retrieval model |
-| Qwen/Qwen3-Embedding-8B | 32768 tokens | 4096 | Very Slow | Excellent / SOTA | Heavy GPU-oriented retrieval experiments |
-
----
-
-### 4. Adjusting Chunking Strategy
-
-**Why adjust?** Balance between retrieval precision and context richness.
-
-> **Validation tool:** Use 🐿️ [**Chunky**](https://github.com/GiovanniPasq/chunky) to clean Markdown, inspect chunks, compare chunking strategies, and enrich metadata before re-indexing.
-
-**Step 1:** Update chunk sizes in `project/config.py`
-
-```python
-# For short, factual queries (e.g., technical documentation)
-CHILD_CHUNK_SIZE = 300
-CHILD_CHUNK_OVERLAP = 60
-MIN_PARENT_SIZE = 1500
-MAX_PARENT_SIZE = 8000
-
-# For narrative or contextual queries (e.g., legal documents)
-# CHILD_CHUNK_SIZE = 800
-# CHILD_CHUNK_OVERLAP = 150
-# MIN_PARENT_SIZE = 3000
-# MAX_PARENT_SIZE = 15000
-```
-
-**Step 2 (Optional):** Replace the splitter in `project/document_chunker.py`
-
-**Default (Character-based):**
-```python
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-self.__child_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=config.CHILD_CHUNK_SIZE,
-    chunk_overlap=config.CHILD_CHUNK_OVERLAP
-)
-```
-
-**Alternative (Sentence-aware):**
-```python
-from langchain_text_splitters import SentenceTransformersTokenTextSplitter
-
-self.__child_splitter = SentenceTransformersTokenTextSplitter(
-    chunk_size=config.CHILD_CHUNK_SIZE,
-    chunk_overlap=config.CHILD_CHUNK_OVERLAP
-)
-```
-
-**Step 3:** Re-run ingestion
-
-Use **Clear All** in the Gradio interface, then upload the documents again. Existing documents are intentionally skipped to avoid accidental duplicates.
-
-**Chunking Guidelines:**
-
-> ⚠️ **Disclaimer:** These are empirical guidelines. Optimal sizes depend on:
-> - **Child chunk** → embedding model's context window (e.g. 256 tokens for all-MiniLM-L6-v2, 512 for bge-large-en-v1.5): child size should not exceed it
-> - **Parent chunk** → generative model's context window (e.g. 8K, 32K, 128K tokens): parent must fit within the context sent to the LLM alongside the query
->
-> Always validate values empirically on your own corpus.
-
-The chunker enforces `MAX_PARENT_SIZE`, deduplicates merged header metadata, and rebalances small neighboring chunks when possible. A document shorter than `MIN_PARENT_SIZE` remains a single smaller chunk.
-
-Tables are deliberately excluded from this chunking path: they are extracted separately into DuckDB (see [Architecture Overview](#architecture-overview)) and never appear in the narrative markdown that gets split and embedded, so a table can't be cut mid-structure by the text splitter.
-
-| Document Type | Child Size | Parent Size | Reasoning |
-|---------------|-----------|-------------|-----------|
-| Technical Docs | 300-500 | 2000-4000 | Precise lookups, code snippets |
-| Legal Contracts | 600-1000 | 5000-15000 | Context-heavy, definitions |
-| Research Papers | 400-600 | 3000-8000 | Balance of precision and context |
-| FAQs / Knowledge Base | 200-400 | 1500-4000 | Short, focused answers |
-
----
-
-### 5. Agent Configuration
-
-Tune agent behavior in `project/config.py`:
-```python
-# Hard limits to prevent infinite loops
-MAX_TOOL_CALLS = 8       # Maximum tool calls per agent run
-MAX_ITERATIONS = 10      # Maximum agent loop iterations
-GRAPH_RECURSION_LIMIT = 50 # Maximum number of steps before hitting a stop condition
-MAIN_HISTORY_MESSAGES_TO_KEEP = 4  # Raw messages retained after each answer; minimum 2
-
-# Context compression thresholds
-BASE_TOKEN_THRESHOLD = 2000     # Initial token threshold for compression
-TOKEN_GROWTH_FACTOR = 0.9       # Multiplier applied after each compression
-```
-
-| Parameter | Effect |
-|-----------|--------|
-| `MAX_TOOL_CALLS` | Maximum cumulative tool calls requested; a request that would exceed it is not executed |
-| `MAX_ITERATIONS` | Maximum LLM reasoning iterations; a final answer at the boundary is still accepted |
-| `GRAPH_RECURSION_LIMIT` | Increase for complex [graphs](https://docs.langchain.com/oss/python/langgraph/errors/GRAPH_RECURSION_LIMIT) |
-| `BASE_TOKEN_THRESHOLD` | Delay compression by increasing this value |
-| `TOKEN_GROWTH_FACTOR` | Lower values compress more aggressively |
 
 ---
 
 ## Observability
 
-Optional tracing with [Langfuse](https://langfuse.com) captures every LLM call, tool invocation, and graph transition. It is useful for debugging agent behavior, tracking costs, and evaluating retrieval quality.
-
-### Enabling Langfuse
-
-1. Sign up on [Langfuse Cloud](https://cloud.langfuse.com/), create an organization, then create a project and generate API keys from the project settings.
-2. Set environment variables (or copy `.env.example` to `.env`):
-
-```bash
-export LANGFUSE_ENABLED=true
-export LANGFUSE_PUBLIC_KEY=pk-lf-...
-export LANGFUSE_SECRET_KEY=sk-lf-...
-export LANGFUSE_BASE_URL=https://cloud.langfuse.com   # or your self-hosted URL
-```
-
-3. Run the app normally. Traces appear in your [Langfuse dashboard](https://cloud.langfuse.com/).
-
-To disable tracing, set `LANGFUSE_ENABLED=false` or leave the variables unset. The application runs identically either way.
-
-For additional details on integrating Langfuse with LangChain or LangGraph, see the official [documentation](https://docs.langchain.com/oss/python/integrations/providers/langfuse).
-
-### What gets traced
-
-| Component | Traced operations |
-|-----------|-------------------|
-| Graph nodes | `summarize_history`, `rewrite_query`, `orchestrator`, `compress_context`, `fallback_response`, `aggregate_answers` |
-| Tools | `search_child_chunks`, `retrieve_parent_chunks`, `search_filing_tables` (arguments + results, including citation artifacts) |
-| Structured output | `QueryAnalysis` parsing in the rewrite step |
-| Subgraph fan-out | Parallel agent invocations via `Send()` |
-
-### Hosting options
-
-- **Langfuse Cloud** — sign up at [cloud.langfuse.com](https://cloud.langfuse.com) and check the current plan limits there.
-- **Self-hosted** — MIT-licensed, deploy with Docker Compose. See the [official self-hosting docs](https://langfuse.com/self-hosting).
-
-For a conceptual tracing guide and platform context, see [`notebooks/observability.ipynb`](../notebooks/observability.ipynb).
+Optional Langfuse tracing (`core/observability.py`) records LLM calls, tool calls and graph transitions. Enable it with `LANGFUSE_ENABLED=true` plus the public and secret keys (see `.env.example`). If keys are missing or authentication fails, tracing is skipped and the app runs normally. Separately, `EXECUTION_LOGGING_ENABLED = True` prints graph steps, state previews and tool inputs/outputs to the terminal.
 
 ---
 
-## Advanced Topics
+## Development Utilities
 
-### Customizing the RAG Agent
+Run ingestion without the API, useful for checking parser quality on a real filing:
 
-**Location:** `project/rag_agent/`
-
-**Add/Remove Nodes:** Edit `graph.py` and `nodes.py`
-
-Example: Adding a fact-checking node
-```python
-# In nodes.py
-def fact_check_node(state):
-    # Your fact-checking logic
-    return {"fact_checked": True}
-
-# In graph.py
-builder.add_node("fact_check", fact_check_node)
-builder.add_edge("retrieve", "fact_check")
-```
-
-**Modify Conditional Routing:** Edit `edges.py` to change graph flow logic
-
-Example from the system - routing based on query clarity:
-```python
-def route_after_rewrite(state: State) -> Literal["request_clarification", "agent"]:
-    """Routes to human input if question unclear, otherwise processes all rewritten queries"""
-    if not state.get("questionIsClear", False):
-        return "request_clarification"
-    else:
-        # Fan-out: send each rewritten question to parallel processing
-        return [
-            Send("agent", {"question": query, "question_index": idx, "messages": []})
-            for idx, query in enumerate(state["rewrittenQuestions"])
-        ]
-```
-
-This pattern allows the agent to either request clarification from the user or fan-out multiple query variations for parallel retrieval.
-
-**Modify Prompts:** Edit `prompts.py` to change agent behavior and response style
-
-**Add Custom Tools:** Extend `tools.py` with new retrieval strategies or external integrations. A tool that should contribute citations should follow the pattern used by the existing three tools: register with `response_format="content_and_artifact"` and return `(content, citations)`, where `citations` is a list of dicts rather than text embedded in `content`.
-
-### Replacing Storage Backends
-
-**Vector Database:**
-- Default: Local Qdrant
-- Alternatives: Remote Qdrant Cloud, Pinecone, Weaviate
-- Edit: `project/db/vector_db_manager.py`
-
-**Parent Store:**
-- Default: JSON file
-- Alternatives: PostgreSQL, MongoDB, S3
-- Edit: `project/db/parent_store_manager.py`
-
-### Extending the UI
-
-**Location:** `project/ui/gradio_app.py`
-
-Add runtime settings, admin panels, or analytics:
-```python
-with gr.Accordion("Advanced Settings", open=False):
-    provider_dropdown = gr.Dropdown(
-        choices=["openai", "anthropic", "google", "ollama"],
-        label="LLM Provider"
-    )
-```
-
-### Docker Deployment
-
-> ⚠️ **System Requirements**: At least 8GB of RAM allocated to Docker; 12GB is recommended when indexing with Qwen embeddings and running the default Ollama model locally. Exact memory use depends on the Ollama model build and quantization.
-
-#### Build and Run
 ```bash
-# Build image
-docker build -t agentic-rag -f project/Dockerfile .
-
-# Run container
-docker run --name rag-assistant -p 7860:7860 agentic-rag
+python -m ingestion.test_ingest path/to/statement.pdf [more.pdf ...]
 ```
 
-**Optional: GPU acceleration** (NVIDIA only):
-```bash
-docker run --gpus all --name rag-assistant -p 7860:7860 agentic-rag
-```
+It reports counts and prints the tables now in DuckDB.
 
-**Common commands:**
-```bash
-docker stop rag-assistant      # Stop
-docker start rag-assistant     # Restart
-docker logs -f rag-assistant   # View logs
-docker rm -f rag-assistant     # Remove
-```
+---
 
-> ⚠️ **Performance Note**: On Windows/Mac, Docker runs via a Linux VM which may slow down I/O operations like document indexing. LLM inference speed is largely unaffected. On Linux, performance is comparable to running locally.
+## Known Limitations
 
-Once running, open `http://localhost:7860`.
+- **Duplicate detection is by filename only.** Identical content under a different name is ingested again.
+- **Narrative page ranges are approximate.** They are recorded per parent chunk, so a citation can span several pages, and a chunk that starts mid-page before a page marker can be attributed to the later page. Narrative citations have no bounding box.
+- **Tables are stored whole**, not as individual line items. The agent reads figures out of the returned table; there are no structured line items or valuation tools (DCF, P/E) yet.
+- **Single instance.** One global `RAGSystem`; conversation state, upload jobs and runtime LLM settings are in memory only. Switching the LLM drops active conversations. Ingestion, delete and clear share one lock in `DocumentManager`: concurrent uploads run one at a time, and delete/clear refuse (409) while one is running.
+- **Deleting a document mid-conversation** leaves earlier answers' citations pointing at it; their page-image requests return 404. Deleting while that same file is still being ingested is not guarded.
+- **Citations are fail-closed.** If the LLM's answer lacks a well-formed `Sources:` list, no citations are returned for it.
+- **Ingestion depends on LlamaParse** (network and API key) unless Docling is enabled. The raw-output debug dump in `parsers.py` writes next to the repository's parent directory.
+- **Leftover files.** `app.py`, `ui/`, `assets/` and `core/chat_interface.py` are from the earlier Gradio interface and are unused. The `Dockerfile` still targets the Gradio layout and does not work for the current FastAPI app. `ingestion/metadata_extractor.py` is not wired in.
 
 ---
 
 ## Troubleshooting
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| "Model not found" error | Incorrect model name for provider | Verify `LLM_MODEL` matches provider's API (e.g., `gpt-4o-mini` not `gpt4-mini`) |
-| Low-quality retrieval results | Poor embedding model or chunk configuration | Re-index with better embeddings or adjust chunk sizes |
-| Vector size mismatch | Existing Qdrant collection was built with a different embedding model | Clear the collection and re-index documents after changing `DENSE_MODEL` |
-| Slow response times | Large embedding model or high `top_k` value | Use smaller embedding models (e.g., all-MiniLM-L6-v2) or reduce `top_k` in retrieval tools |
-| API rate limits exceeded | Too many requests to external provider | Add retry logic with exponential backoff or switch to local Ollama models |
-| Out of memory errors | Large document set or embedding model | Use smaller embeddings, reduce batch size, or enable GPU acceleration |
-| Empty retrieval results | Collection not indexed or wrong collection name | Verify documents are uploaded and `CHILD_COLLECTION` name matches in config |
-| Import errors after provider switch | Missing SDK installation | Install required package: `pip install langchain-{provider}` |
-| Inconsistent answers across runs | High temperature setting | Set `LLM_TEMPERATURE = 0` in config for deterministic responses |
-| `TypeError: can only concatenate str (not 'list') to str` when using Gemini | `AIMessage.content` can be a list of content-part dicts for Gemini instead of a plain string, unlike Ollama | Already handled by `LLMContentNormalizer.to_text()` (`project/core/llm_content.py`); if you hit this in new code, run content through it before concatenating |
-| Numeric answer is missing a citation, or shows a citation for a page that wasn't used | A tool was called but its result wasn't referenced in the final answer | Expected behavior — `aggregate_answers` only keeps citations whose source appears in the LLM's own `Sources:` list (see [Citation Tracking, Phase 3](#citation-tracking)) |
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| `Vector size mismatch` on startup | Qdrant collection built with a different embedding model | Clear the collection (delete `qdrant_db/`) and re-ingest |
+| Upload job ends in `error` | LlamaParse key missing or invalid, parse failed, or no narrative chunks were produced | Read the job's `error`; check `LLAMA_CLOUD_API_KEY` |
+| 422 on `POST /api/documents` | Multipart field not named `files`, or `python-multipart` missing | Use `-F "files=@..."`; install `python-multipart` |
+| Chat returns no citations | LLM omitted the `Sources:` block, or the answer used no retrieved evidence | Expected (see Known Limitations); check the answer text |
+| Delete returns 500 | A store failed partway (e.g. Qdrant unavailable) | The document is still listed; fix the cause and call DELETE again |
+| Page image 404 | Document ingested before page sizes were recorded, or the PDF file is missing from `source_docs/` | Re-ingest the document |
+| Browser cannot read `X-Page-Width` | Frontend origin differs from the CORS allow-list | Update `allow_origins` in `main.py` |
+| `TypeError: can only concatenate str (not "list")` | Provider returned list-shaped message content | Handled by `LLMContentNormalizer`; use it in any new code that concatenates `.content` |
+| Gemini rate-limit errors | Free-tier request limits | Wait, or switch model/provider via `/api/config/llm`; the client is set to `max_retries=1` |
+| `409` on delete or clear | An ingestion is still running | Wait for the upload job to reach `done`, then retry |
+| Old conversation stops working after switching LLM | The agent graph (and its checkpointer) was rebuilt | Start a new thread (omit `thread_id`) |
