@@ -345,3 +345,6 @@ It reports counts and prints the tables now in DuckDB.
 | Gemini rate-limit errors | Free-tier request limits | Wait, or switch model/provider via `/api/config/llm`; the client is set to `max_retries=1` |
 | `409` on delete or clear | An ingestion is still running | Wait for the upload job to reach `done`, then retry |
 | Old conversation stops working after switching LLM | The agent graph (and its checkpointer) was rebuilt | Start a new thread (omit `thread_id`) |
+
+References:
+https://github.com/GiovanniPasq/agentic-rag-for-dummies
