@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 255 255 255;
+    --surface: 248 250 252;
+    --surface-card: 255 255 255;
+  }
+  .dark {
+    --background: 11 15 23;
+    --surface: 17 24 39;
+    --surface-card: 22 31 48;
+  }
+}
+
+/* Custom modern scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.45);
+}
+
+/* Table styling for financial markdown */
+.prose-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+  font-size: 0.8125rem;
+}
+
+.prose-table th {
+  font-weight: 600;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+}
+
+.prose-table td {
+  padding: 0.4rem 0.75rem;
+}

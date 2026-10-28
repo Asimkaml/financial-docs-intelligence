@@ -1,0 +1,953 @@
+{
+  "pages": [
+    {
+      "items": [
+        {
+          "level": 2,
+          "md": "## SYSTEMS LIMITED CONSOLIDATED CONDENSED INTERIM STATEMENT OF PROFIT OR LOSS (UNAUDITED)",
+          "value": "SYSTEMS LIMITED CONSOLIDATED CONDENSED INTERIM STATEMENT OF PROFIT OR LOSS (UNAUDITED)",
+          "bbox": [
+            {
+              "h": 20.695431904161424,
+              "w": 375.514567327133,
+              "x": 26.1864789729074,
+              "y": 48.95880832282471,
+              "confidence": 0.5,
+              "end_index": 88,
+              "label": "paragraph_title",
+              "start_index": 0
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "level": 2,
+          "md": "## FOR THE SIX MONTHS AND THREE MONTHS ENDED JUNE 30, 2026",
+          "value": "FOR THE SIX MONTHS AND THREE MONTHS ENDED JUNE 30, 2026",
+          "bbox": [
+            {
+              "h": 10.797616645649441,
+              "w": 287.9344925192074,
+              "x": 25.586615446825718,
+              "y": 70.25410781841109,
+              "confidence": 0.5,
+              "end_index": 57,
+              "label": "paragraph_title",
+              "start_index": 0
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "csv": ",\"Note\",\"Six Months Ended<br/>June 30,<br/>2026<br/>Rupees\",\"Six Months Ended<br/>June 30,<br/>2025<br/>Rupees\",\"Three Months Ended<br/>June 30,<br/>2026<br/>Rupees\",\"Three Months Ended<br/>June 30,<br/>2025<br/>Rupees\"\n\"Revenue from contract with customers - net\",,\"49,715,861,103\",\"36,739,108,828\",\"25,738,267,227\",\"18,659,553,878\"\n\"Cost of sales\",,\"37,027,470,539\",\"27,453,777,706\",\"19,088,049,606\",\"13,924,272,801\"\n\"Gross profit\",,\"12,688,390,564\",\"9,285,331,122\",\"6,650,217,621\",\"4,735,281,077\"\n\"Distribution expenses\",,\"1,749,315,669\",\"1,300,076,908\",\"882,198,760\",\"676,192,425\"\n\"Administrative expenses\",,\"4,013,835,150\",\"2,848,741,280\",\"2,049,871,118\",\"1,438,960,786\"\n\"Research & development expenses\",,\"116,644,283\",\"24,868,807\",\"55,299,941\",\"7,220,183\"\n\"Impairment losses on financial assets\",\"13\",\"269,469,561\",\"28,227,730\",\"239,966,369\",\"(2,627,123)\"\n,,\"6,149,264,663\",\"4,201,914,725\",\"3,227,336,188\",\"2,119,746,271\"\n\"Operating profit\",,\"6,539,125,901\",\"5,083,416,397\",\"3,422,881,433\",\"2,615,534,806\"\n\"Other income\",\"14\",\"567,048,665\",\"820,901,359\",\"226,810,172\",\"486,511,110\"\n\"Share of loss from associate\",,\"-\",\"56,225,708\",\"-\",\"47,225,708\"\n\"Finance cost\",,\"303,780,255\",\"165,990,055\",\"174,467,133\",\"76,354,027\"\n\"Profit before taxation and levy\",,\"6,802,394,311\",\"5,682,101,993\",\"3,475,224,472\",\"2,978,466,181\"\n\"Levy\",,\"397,739,772\",\"337,212,254\",\"228,384,399\",\"227,873,871\"\n\"Profit before taxation\",,\"6,404,654,539\",\"5,344,889,739\",\"3,246,840,073\",\"2,750,592,310\"\n\"Taxation\",,\"354,260,313\",\"192,477,805\",\"222,155,431\",\"99,655,504\"\n\"Profit after taxation\",,\"6,050,394,226\",\"5,152,411,934\",\"3,024,684,642\",\"2,650,936,804\"\n\"Attributable to:\",,,,,\n\"Equity holders of the parent\",,\"6,050,394,226\",\"5,152,705,306\",\"3,024,684,642\",\"2,650,943,429\"\n\"Non-controlling interest\",,\"-\",\"(293,373)\",\"-\",\"(6,626)\"\n,,\"6,050,394,226\",\"5,152,411,933\",\"3,024,684,642\",\"2,650,936,804\"\n\"Earnings per share:\",\"15\",,,,\n\"Basic earnings per share\",,\"3.95\",\"3.52\",\"1.98\",\"1.81\"\n\"Diluted earnings per share\",,\"3.88\",\"3.49\",\"1.95\",\"1.80\"",
+          "html": "<table>\n  <thead>\n    <tr>\n        <th> </th>\n        <th> </th>\n        <th colspan=\"2\">Six Months Ended</th>\n        <th colspan=\"2\">Three Months Ended</th>\n    </tr>\n    <tr>\n        <th> </th>\n        <th> </th>\n        <th>June 30,</th>\n        <th>June 30,</th>\n        <th>June 30,</th>\n        <th>June 30,</th>\n    </tr>\n    <tr>\n        <th> </th>\n        <th> </th>\n        <th>2026</th>\n        <th>2025</th>\n        <th>2026</th>\n        <th>2025</th>\n    </tr>\n    <tr>\n        <th> </th>\n        <th>Note</th>\n        <th>Rupees</th>\n        <th>Rupees</th>\n        <th>Rupees</th>\n        <th>Rupees</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n        <td>Revenue from contract with customers - net</td>\n        <td> </td>\n        <td>49,715,861,103</td>\n        <td>36,739,108,828</td>\n        <td>25,738,267,227</td>\n        <td>18,659,553,878</td>\n    </tr>\n    <tr>\n        <td>Cost of sales</td>\n        <td> </td>\n        <td>37,027,470,539</td>\n        <td>27,453,777,706</td>\n        <td>19,088,049,606</td>\n        <td>13,924,272,801</td>\n    </tr>\n    <tr>\n        <td><strong>Gross profit</strong></td>\n        <td> </td>\n        <td><strong>12,688,390,564</strong></td>\n        <td><strong>9,285,331,122</strong></td>\n        <td><strong>6,650,217,621</strong></td>\n        <td><strong>4,735,281,077</strong></td>\n    </tr>\n    <tr>\n        <td> </td>\n        <td> </td>\n        <td> </td>\n        <td> </td>\n        <td> </td>\n        <td> </td>\n    </tr>\n    <tr>\n        <td>Distribution expenses</td>\n        <td> </td>\n        <td>1,749,315,669</td>\n        <td>1,300,076,908</td>\n        <td>882,198,760</td>\n        <td>676,192,425</td>\n    </tr>\n    <tr>\n        <td>Administrative expenses</td>\n        <td> </td>\n        <td>4,013,835,150</td>\n        <td>2,848,741,280</td>\n        <td>2,049,871,118</td>\n        <td>1,438,960,786</td>\n    </tr>\n    <tr>\n        <td>Research &#x26; development expenses</td>\n        <td> </td>\n        <td>116,644,283</td>\n        <td>24,868,807</td>\n        <td>55,299,941</td>\n        <td>7,220,183</td>\n    </tr>\n    <tr>\n        <td>Impairment losses on financial assets</td>\n        <td>13</td>\n        <td>269,469,561</td>\n        <td>28,227,730</td>\n        <td>239,966,369</td>\n        <td>(2,627,123)</td>\n    </tr>\n    <tr>\n        <td> </td>\n        <td> </td>\n        <td>6,149,264,663</td>\n        <td>4,201,914,725</td>\n        <td>3,227,336,188</td>\n        <td>2,119,746,271</td>\n    </tr>\n    <tr>\n        <td><strong>Operating profit</strong></td>\n        <td> </td>\n        <td><strong>6,539,125,901</strong></td>\n        <td><strong>5,083,416,397</strong></td>\n        <td><strong>3,422,881,433</strong></td>\n        <td><strong>2,615,534,806</strong></td>\n    </tr>\n    <tr>\n        <td>Other income</td>\n        <td>14</td>\n        <td>567,048,665</td>\n        <td>820,901,359</td>\n        <td>226,810,172</td>\n        <td>486,511,110</td>\n    </tr>\n    <tr>\n        <td>Share of loss from associate</td>\n        <td> </td>\n        <td>-</td>\n        <td>56,225,708</td>\n        <td>-</td>\n        <td>47,225,708</td>\n    </tr>\n    <tr>\n        <td>Finance cost</td>\n        <td> </td>\n        <td>303,780,255</td>\n        <td>165,990,055</td>\n        <td>174,467,133</td>\n        <td>76,354,027</td>\n    </tr>\n    <tr>\n        <td><strong>Profit before taxation and levy</strong></td>\n        <td> </td>\n        <td><strong>6,802,394,311</strong></td>\n        <td><strong>5,682,101,993</strong></td>\n        <td><strong>3,475,224,472</strong></td>\n        <td><strong>2,978,466,181</strong></td>\n    </tr>\n    <tr>\n        <td>Levy</td>\n        <td> </td>\n        <td>397,739,772</td>\n        <td>337,212,254</td>\n        <td>228,384,399</td>\n        <td>227,873,871</td>\n    </tr>\n    <tr>\n        <td><strong>Profit before taxation</strong></td>\n        <td> </td>\n        <td><strong>6,404,654,539</strong></td>\n        <td><strong>5,344,889,739</strong></td>\n        <td><strong>3,246,840,073</strong></td>\n        <td><strong>2,750,592,310</strong></td>\n    </tr>\n    <tr>\n        <td>Taxation</td>\n        <td> </td>\n        <td>354,260,313</td>\n        <td>192,477,805</td>\n        <td>222,155,431</td>\n        <td>99,655,504</td>\n    </tr>\n    <tr>\n        <td><strong>Profit after taxation</strong></td>\n        <td> </td>\n        <td><strong>6,050,394,226</strong></td>\n        <td><strong>5,152,411,934</strong></td>\n        <td><strong>3,024,684,642</strong></td>\n        <td><strong>2,650,936,804</strong></td>\n    </tr>\n    <tr>\n        <td> </td>\n        <td> </td>\n        <td> </td>\n        <td> </td>\n        <td> </td>\n        <td> </td>\n    </tr>\n    <tr>\n        <td> </td>\n        <td> </td>\n        <td> </td>\n        <td> </td>\n        <td> </td>\n        <td> </td>\n    </tr>\n    <tr>\n        <td colspan=\"6\">Attributable to:</td>\n    </tr>\n    <tr>\n        <td>Equity holders of the parent</td>\n        <td> </td>\n        <td>6,050,394,226</td>\n        <td>5,152,705,306</td>\n        <td>3,024,684,642</td>\n        <td>2,650,943,429</td>\n    </tr>\n    <tr>\n        <td>Non-controlling interest</td>\n        <td> </td>\n        <td>-</td>\n        <td>(293,373)</td>\n        <td>-</td>\n        <td>(6,626)</td>\n    </tr>\n    <tr>\n        <td> </td>\n        <td> </td>\n        <td><strong>6,050,394,226</strong></td>\n        <td><strong>5,152,411,933</strong></td>\n        <td><strong>3,024,684,642</strong></td>\n        <td><strong>2,650,936,804</strong></td>\n    </tr>\n    <tr>\n        <td> </td>\n        <td> </td>\n        <td> </td>\n        <td> </td>\n        <td> </td>\n        <td> </td>\n    </tr>\n    <tr>\n        <td>Earnings per share:</td>\n        <td>15</td>\n        <td> </td>\n        <td> </td>\n        <td> </td>\n        <td> </td>\n    </tr>\n    <tr>\n        <td>Basic earnings per share</td>\n        <td> </td>\n        <td><strong>3.95</strong></td>\n        <td>3.52</td>\n        <td><strong>1.98</strong></td>\n        <td>1.81</td>\n    </tr>\n    <tr>\n        <td>Diluted earnings per share</td>\n        <td> </td>\n        <td><strong>3.88</strong></td>\n        <td>3.49</td>\n        <td><strong>1.95</strong></td>\n        <td>1.80</td>\n    </tr>\n  </tbody>\n</table>",
+          "md": "|                                            | Note | Six Months Ended<br/>June 30,<br/>2026<br/>Rupees | Six Months Ended<br/>June 30,<br/>2025<br/>Rupees | Three Months Ended<br/>June 30,<br/>2026<br/>Rupees | Three Months Ended<br/>June 30,<br/>2025<br/>Rupees |\n| ------------------------------------------ | ---- | ------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------- |\n| Revenue from contract with customers - net |      | 49,715,861,103                                    | 36,739,108,828                                    | 25,738,267,227                                      | 18,659,553,878                                      |\n| Cost of sales                              |      | 37,027,470,539                                    | 27,453,777,706                                    | 19,088,049,606                                      | 13,924,272,801                                      |\n| **Gross profit**                           |      | **12,688,390,564**                                | **9,285,331,122**                                 | **6,650,217,621**                                   | **4,735,281,077**                                   |\n|                                            |      |                                                   |                                                   |                                                     |                                                     |\n| Distribution expenses                      |      | 1,749,315,669                                     | 1,300,076,908                                     | 882,198,760                                         | 676,192,425                                         |\n| Administrative expenses                    |      | 4,013,835,150                                     | 2,848,741,280                                     | 2,049,871,118                                       | 1,438,960,786                                       |\n| Research & development expenses            |      | 116,644,283                                       | 24,868,807                                        | 55,299,941                                          | 7,220,183                                           |\n| Impairment losses on financial assets      | 13   | 269,469,561                                       | 28,227,730                                        | 239,966,369                                         | (2,627,123)                                         |\n|                                            |      | 6,149,264,663                                     | 4,201,914,725                                     | 3,227,336,188                                       | 2,119,746,271                                       |\n| **Operating profit**                       |      | **6,539,125,901**                                 | **5,083,416,397**                                 | **3,422,881,433**                                   | **2,615,534,806**                                   |\n| Other income                               | 14   | 567,048,665                                       | 820,901,359                                       | 226,810,172                                         | 486,511,110                                         |\n| Share of loss from associate               |      | -                                                 | 56,225,708                                        | -                                                   | 47,225,708                                          |\n| Finance cost                               |      | 303,780,255                                       | 165,990,055                                       | 174,467,133                                         | 76,354,027                                          |\n| **Profit before taxation and levy**        |      | **6,802,394,311**                                 | **5,682,101,993**                                 | **3,475,224,472**                                   | **2,978,466,181**                                   |\n| Levy                                       |      | 397,739,772                                       | 337,212,254                                       | 228,384,399                                         | 227,873,871                                         |\n| **Profit before taxation**                 |      | **6,404,654,539**                                 | **5,344,889,739**                                 | **3,246,840,073**                                   | **2,750,592,310**                                   |\n| Taxation                                   |      | 354,260,313                                       | 192,477,805                                       | 222,155,431                                         | 99,655,504                                          |\n| **Profit after taxation**                  |      | **6,050,394,226**                                 | **5,152,411,934**                                 | **3,024,684,642**                                   | **2,650,936,804**                                   |\n|                                            |      |                                                   |                                                   |                                                     |                                                     |\n|                                            |      |                                                   |                                                   |                                                     |                                                     |\n| Attributable to:                           |      |                                                   |                                                   |                                                     |                                                     |\n| Equity holders of the parent               |      | 6,050,394,226                                     | 5,152,705,306                                     | 3,024,684,642                                       | 2,650,943,429                                       |\n| Non-controlling interest                   |      | -                                                 | (293,373)                                         | -                                                   | (6,626)                                             |\n|                                            |      | **6,050,394,226**                                 | **5,152,411,933**                                 | **3,024,684,642**                                   | **2,650,936,804**                                   |\n|                                            |      |                                                   |                                                   |                                                     |                                                     |\n| Earnings per share:                        | 15   |                                                   |                                                   |                                                     |                                                     |\n| Basic earnings per share                   |      | **3.95**                                          | 3.52                                              | **1.98**                                            | 1.81                                                |\n| Diluted earnings per share                 |      | **3.88**                                          | 3.49                                              | **1.95**                                            | 1.80                                                |",
+          "rows": [
+            [
+              "",
+              "Note",
+              "Six Months Ended<br/>June 30,<br/>2026<br/>Rupees",
+              "Six Months Ended<br/>June 30,<br/>2025<br/>Rupees",
+              "Three Months Ended<br/>June 30,<br/>2026<br/>Rupees",
+              "Three Months Ended<br/>June 30,<br/>2025<br/>Rupees"
+            ],
+            [
+              "Revenue from contract with customers - net",
+              "",
+              "49,715,861,103",
+              "36,739,108,828",
+              "25,738,267,227",
+              "18,659,553,878"
+            ],
+            [
+              "Cost of sales",
+              "",
+              "37,027,470,539",
+              "27,453,777,706",
+              "19,088,049,606",
+              "13,924,272,801"
+            ],
+            [
+              "Gross profit",
+              "",
+              "12,688,390,564",
+              "9,285,331,122",
+              "6,650,217,621",
+              "4,735,281,077"
+            ],
+            [
+              "Distribution expenses",
+              "",
+              "1,749,315,669",
+              "1,300,076,908",
+              "882,198,760",
+              "676,192,425"
+            ],
+            [
+              "Administrative expenses",
+              "",
+              "4,013,835,150",
+              "2,848,741,280",
+              "2,049,871,118",
+              "1,438,960,786"
+            ],
+            [
+              "Research & development expenses",
+              "",
+              "116,644,283",
+              "24,868,807",
+              "55,299,941",
+              "7,220,183"
+            ],
+            [
+              "Impairment losses on financial assets",
+              "13",
+              "269,469,561",
+              "28,227,730",
+              "239,966,369",
+              "(2,627,123)"
+            ],
+            [
+              "",
+              "",
+              "6,149,264,663",
+              "4,201,914,725",
+              "3,227,336,188",
+              "2,119,746,271"
+            ],
+            [
+              "Operating profit",
+              "",
+              "6,539,125,901",
+              "5,083,416,397",
+              "3,422,881,433",
+              "2,615,534,806"
+            ],
+            [
+              "Other income",
+              "14",
+              "567,048,665",
+              "820,901,359",
+              "226,810,172",
+              "486,511,110"
+            ],
+            [
+              "Share of loss from associate",
+              "",
+              "-",
+              "56,225,708",
+              "-",
+              "47,225,708"
+            ],
+            [
+              "Finance cost",
+              "",
+              "303,780,255",
+              "165,990,055",
+              "174,467,133",
+              "76,354,027"
+            ],
+            [
+              "Profit before taxation and levy",
+              "",
+              "6,802,394,311",
+              "5,682,101,993",
+              "3,475,224,472",
+              "2,978,466,181"
+            ],
+            [
+              "Levy",
+              "",
+              "397,739,772",
+              "337,212,254",
+              "228,384,399",
+              "227,873,871"
+            ],
+            [
+              "Profit before taxation",
+              "",
+              "6,404,654,539",
+              "5,344,889,739",
+              "3,246,840,073",
+              "2,750,592,310"
+            ],
+            [
+              "Taxation",
+              "",
+              "354,260,313",
+              "192,477,805",
+              "222,155,431",
+              "99,655,504"
+            ],
+            [
+              "Profit after taxation",
+              "",
+              "6,050,394,226",
+              "5,152,411,934",
+              "3,024,684,642",
+              "2,650,936,804"
+            ],
+            [
+              "Attributable to:",
+              "",
+              "",
+              "",
+              "",
+              ""
+            ],
+            [
+              "Equity holders of the parent",
+              "",
+              "6,050,394,226",
+              "5,152,705,306",
+              "3,024,684,642",
+              "2,650,943,429"
+            ],
+            [
+              "Non-controlling interest",
+              "",
+              "-",
+              "(293,373)",
+              "-",
+              "(6,626)"
+            ],
+            [
+              "",
+              "",
+              "6,050,394,226",
+              "5,152,411,933",
+              "3,024,684,642",
+              "2,650,936,804"
+            ],
+            [
+              "Earnings per share:",
+              "15",
+              "",
+              "",
+              "",
+              ""
+            ],
+            [
+              "Basic earnings per share",
+              "",
+              "3.95",
+              "3.52",
+              "1.98",
+              "1.81"
+            ],
+            [
+              "Diluted earnings per share",
+              "",
+              "3.88",
+              "3.49",
+              "1.95",
+              "1.80"
+            ]
+          ],
+          "bbox": [
+            {
+              "h": 399.55,
+              "w": 565.93,
+              "x": 25.93,
+              "y": 93.78,
+              "confidence": 0.5,
+              "label": "table"
+            }
+          ],
+          "parse_concerns": [
+            {
+              "details": "col 2 'Six Months Ended' expects datetime, got 'Rupees' in row 3",
+              "type": "header_value_type_mismatch"
+            },
+            {
+              "details": "col 3 'Three Months Ended' expects datetime, got 'Rupees' in row 3",
+              "type": "header_value_type_mismatch"
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "md": "The annexed notes from 1 to 23 form an integral part of this condensed interim financial information.",
+          "value": "The annexed notes from 1 to 23 form an integral part of this condensed interim financial information.",
+          "bbox": [
+            {
+              "h": 9.74,
+              "w": 390.42,
+              "x": 27.06,
+              "y": 504.87,
+              "confidence": 0.5,
+              "label": "text"
+            }
+          ],
+          "type": "text"
+        },
+        {
+          "md": "signature: CHAIRMAN",
+          "value": "signature: CHAIRMAN",
+          "type": "text"
+        },
+        {
+          "md": "signature: CHIEF EXECUTIVE OFFICER",
+          "value": "signature: CHIEF EXECUTIVE OFFICER",
+          "bbox": [
+            {
+              "h": 9.82,
+              "w": 126.34,
+              "x": 261.49,
+              "y": 630.52,
+              "confidence": 0.5,
+              "label": "caption"
+            },
+            {
+              "h": 70.24,
+              "w": 471.27,
+              "x": 98.97,
+              "y": 571.73,
+              "confidence": 0.5,
+              "label": "key-value-region"
+            }
+          ],
+          "type": "text"
+        },
+        {
+          "md": "signature: CHIEF FINANCIAL OFFICER",
+          "value": "signature: CHIEF FINANCIAL OFFICER",
+          "bbox": [
+            {
+              "h": 9.85,
+              "w": 122.76,
+              "x": 447.12,
+              "y": 630.37,
+              "confidence": 0.5,
+              "label": "key-value-region"
+            }
+          ],
+          "type": "text"
+        },
+        {
+          "md": "(CHAIRMAN)",
+          "value": "(CHAIRMAN)",
+          "type": "text"
+        },
+        {
+          "md": "(CHIEF EXECUTIVE OFFICER)",
+          "value": "(CHIEF EXECUTIVE OFFICER)",
+          "bbox": [
+            {
+              "h": 10.524937499999965,
+              "w": 126.28532147189651,
+              "x": 261.1703194500607,
+              "y": 629.1759374999999,
+              "confidence": 0.5,
+              "end_index": 24,
+              "label": "text",
+              "start_index": 0
+            }
+          ],
+          "type": "text"
+        },
+        {
+          "md": "(CHIEF FINANCIAL OFFICER)",
+          "value": "(CHIEF FINANCIAL OFFICER)",
+          "bbox": [
+            {
+              "h": 10.524937499999965,
+              "w": 121.77513141932877,
+              "x": 447.09037606146387,
+              "y": 629.1759374999999,
+              "confidence": 0.5,
+              "end_index": 24,
+              "label": "text",
+              "start_index": 0
+            }
+          ],
+          "type": "text"
+        }
+      ],
+      "page_height": 792.0,
+      "page_number": 1,
+      "page_width": 612.0,
+      "success": true
+    },
+    {
+      "items": [
+        {
+          "level": 2,
+          "md": "## DIRECTOR'S REVIEW REPORT – 30<sup>TH</sup> JUNE 2026",
+          "value": "DIRECTOR'S REVIEW REPORT – 30<sup>TH</sup> JUNE 2026",
+          "bbox": [
+            {
+              "h": 8.89,
+              "w": 205.12,
+              "x": 53.78,
+              "y": 74.04,
+              "confidence": 0.5,
+              "label": "paragraph_title"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "md": "On behalf of the Board of Directors we are pleased to present the Standalone and Consolidated Financial Statements for the six months ended 30<sup>th</sup> June 2026.",
+          "value": "On behalf of the Board of Directors we are pleased to present the Standalone and Consolidated Financial Statements for the six months ended 30<sup>th</sup> June 2026.",
+          "bbox": [
+            {
+              "h": 24.2069902820122,
+              "w": 506.3286186370767,
+              "x": 52.73796175291194,
+              "y": 99.6174609375,
+              "confidence": 0.9765625,
+              "end_index": 165,
+              "label": "text",
+              "start_index": 0
+            }
+          ],
+          "type": "text"
+        },
+        {
+          "level": 2,
+          "md": "## FINANCIAL RESULTS",
+          "value": "FINANCIAL RESULTS",
+          "bbox": [
+            {
+              "h": 8.67,
+              "w": 90.99,
+              "x": 53.65,
+              "y": 141.57,
+              "confidence": 0.5,
+              "label": "paragraph_title"
+            }
+          ],
+          "type": "heading"
+        },
+        {
+          "md": "**Consolidated:**",
+          "value": "Consolidated:",
+          "bbox": [
+            {
+              "h": 11.879999999999995,
+              "w": 65.08532147189649,
+              "x": 52.959158916296,
+              "y": 167.0625,
+              "confidence": 0.5,
+              "end_index": 16,
+              "label": "text",
+              "start_index": 0
+            }
+          ],
+          "type": "text"
+        },
+        {
+          "md": "During the six months period ended 30<sup>th</sup> June 2026, consolidated revenue grew by 35.3% year over year from Rs. 36,739.11 million to Rs. 49,715.86 million. Gross profit and operating profit increased by 36.6% and 28.6% respectively. Net profit for the period only increased by 17.4% from Rs. 5,152.41 million to Rs. 6,050.40 million since there is exchange loss in this period as compared to the gain recorded in the same period last year. Despite significant currency appreciation over last year with Rs/$ falling from 283 in June 2025 to 278 in June 2026, the Company has absorbed annual wage adjustment and fuel price inflation in this period without benefiting from any currency gains. This has been achieved through strong growth, both organically and inorganically, improving efficiency and overall optimization. Hence GP and OP margins are maintained in line with same period last year.",
+          "value": "During the six months period ended 30<sup>th</sup> June 2026, consolidated revenue grew by 35.3% year over year from Rs. 36,739.11 million to Rs. 49,715.86 million. Gross profit and operating profit increased by 36.6% and 28.6% respectively. Net profit for the period only increased by 17.4% from Rs. 5,152.41 million to Rs. 6,050.40 million since there is exchange loss in this period as compared to the gain recorded in the same period last year. Despite significant currency appreciation over last year with Rs/$ falling from 283 in June 2025 to 278 in June 2026, the Company has absorbed annual wage adjustment and fuel price inflation in this period without benefiting from any currency gains. This has been achieved through strong growth, both organically and inorganically, improving efficiency and overall optimization. Hence GP and OP margins are maintained in line with same period last year.",
+          "bbox": [
+            {
+              "h": 105.34,
+              "w": 507.17,
+              "x": 53.33,
+              "y": 194.79,
+              "confidence": 0.5,
+              "label": "text"
+            }
+          ],
+          "type": "text"
+        },
+        {
+          "md": "Basic and diluted earnings per share increased by 12.2% and 11.2% respectively.",
+          "value": "Basic and diluted earnings per share increased by 12.2% and 11.2% respectively.",
+          "bbox": [
+            {
+              "h": 10.82,
+              "w": 359.19,
+              "x": 53.81,
+              "y": 316.04,
+              "confidence": 0.5,
+              "label": "text"
+            }
+          ],
+          "type": "text"
+        },
+        {
+          "csv": "\"Consolidated<br/>Particulars\",\"Consolidated<br/>Jun-26 (unaudited)<br/>Rs.\",\"Consolidated<br/>Jun-25 (unaudited)<br/>Rs.\",\"Consolidated<br/>Change<br/>%\"\n\"Revenue\",\"49,715,861,103\",\"36,739,108,828\",\"35.3%\"\n\"Gross Profit\",\"12,688,390,564\",\"9,285,331,122\",\"36.6%\"\n\"Operating profit\",\"6,539,125,901\",\"5,083,416,397\",\"28.6%\"\n\"Profit for the period\",\"6,050,394,226\",\"5,152,411,934\",\"17.4%\"\n\"Earnings per share (basic)\",\"3.95\",\"3.52\",\"12.2%\"\n\"Earnings per share (diluted)\",\"3.88\",\"3.49\",\"11.2%\"",
+          "html": "<table>\n  <thead>\n    <tr>\n        <th colspan=\"4\">Consolidated</th>\n    </tr>\n    <tr>\n        <th>Particulars</th>\n        <th>Jun-26 (unaudited)</th>\n        <th>Jun-25 (unaudited)</th>\n        <th>Change</th>\n    </tr>\n    <tr>\n        <th> </th>\n        <th>Rs.</th>\n        <th>Rs.</th>\n        <th>%</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n        <td>Revenue</td>\n        <td>49,715,861,103</td>\n        <td>36,739,108,828</td>\n        <td>35.3%</td>\n    </tr>\n    <tr>\n        <td>Gross Profit</td>\n        <td>12,688,390,564</td>\n        <td>9,285,331,122</td>\n        <td>36.6%</td>\n    </tr>\n    <tr>\n        <td>Operating profit</td>\n        <td>6,539,125,901</td>\n        <td>5,083,416,397</td>\n        <td>28.6%</td>\n    </tr>\n    <tr>\n        <td>Profit for the period</td>\n        <td>6,050,394,226</td>\n        <td>5,152,411,934</td>\n        <td>17.4%</td>\n    </tr>\n    <tr>\n        <td>Earnings per share (basic)</td>\n        <td>3.95</td>\n        <td>3.52</td>\n        <td>12.2%</td>\n    </tr>\n    <tr>\n        <td>Earnings per share (diluted)</td>\n        <td>3.88</td>\n        <td>3.49</td>\n        <td>11.2%</td>\n    </tr>\n  </tbody>\n</table>",
+          "md": "| Consolidated<br/>Particulars | Consolidated<br/>Jun-26 (unaudited)<br/>Rs. | Consolidated<br/>Jun-25 (unaudited)<br/>Rs. | Consolidated<br/>Change<br/>% |\n| ---------------------------- | ------------------------------------------- | ------------------------------------------- | ----------------------------- |\n| Revenue                      | 49,715,861,103                              | 36,739,108,828                              | 35.3%                         |\n| Gross Profit                 | 12,688,390,564                              | 9,285,331,122                               | 36.6%                         |\n| Operating profit             | 6,539,125,901                               | 5,083,416,397                               | 28.6%                         |\n| Profit for the period        | 6,050,394,226                               | 5,152,411,934                               | 17.4%                         |\n| Earnings per share (basic)   | 3.95                                        | 3.52                                        | 12.2%                         |\n| Earnings per share (diluted) | 3.88                                        | 3.49                                        | 11.2%                         |",
+          "rows": [
+            [
+              "Consolidated<br/>Particulars",
+              "Consolidated<br/>Jun-26 (unaudited)<br/>Rs.",
+              "Consolidated<br/>Jun-25 (unaudited)<br/>Rs.",
+              "Consolidated<br/>Change<br/>%"
+            ],
+            [
+              "Revenue",
+              "49,715,861,103",
+              "36,739,108,828",
+              "35.3%"
+            ],
+            [
+              "Gross Profit",
+              "12,688,390,564",
+              "9,285,331,122",
+              "36.6%"
+            ],
+            [
+              "Operating profit",
+              "6,539,125,901",
+              "5,083,416,397",
+              "28.6%"
+            ],
+            [
+              "Profit for the period",
+              "6,050,394,226",
+              "5,152,411,934",
+              "17.4%"
+            ],
+            [
+              "Earnings per share (basic)",
+              "3.95",
+              "3.52",
+              "12.2%"
+            ],
+            [
+              "Earnings per share (diluted)",
+              "3.88",
+              "3.49",
+              "11.2%"
+            ]
+          ],
+          "bbox": [
+            {
+              "h": 140.72000000000003,
+              "w": 506.28999999999996,
+              "x": 53.34,
+              "y": 354.23,
+              "confidence": 0.5,
+              "end_index": 1254,
+              "label": "table",
+              "start_index": 0
+            }
+          ],
+          "parse_concerns": [
+            {
+              "details": "2 tables on page",
+              "type": "multi_table_page"
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "csv": "\"Other Income – Consolidated<br/>Particulars\",\"Other Income – Consolidated<br/>Jun-26 (unaudited)<br/>Rs.\",\"Other Income – Consolidated<br/>Jun-25 (unaudited)<br/>Rs.\"\n\"Other Income\",\"725,062,972\",\"292,483,230\"\n\"Exchange (Loss) / Gain\",\"(158,014,307)\",\"528,418,129\"\n\"Total\",\"567,048,665\",\"820,901,359\"",
+          "html": "<table>\n  <thead>\n    <tr>\n        <th colspan=\"3\">Other Income – Consolidated</th>\n    </tr>\n    <tr>\n        <th>Particulars</th>\n        <th>Jun-26 (unaudited)</th>\n        <th>Jun-25 (unaudited)</th>\n    </tr>\n    <tr>\n        <th> </th>\n        <th>Rs.</th>\n        <th>Rs.</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n        <td>Other Income</td>\n        <td>725,062,972</td>\n        <td>292,483,230</td>\n    </tr>\n    <tr>\n        <td>Exchange (Loss) / Gain</td>\n        <td>(158,014,307)</td>\n        <td>528,418,129</td>\n    </tr>\n    <tr>\n        <td>Total</td>\n        <td>567,048,665</td>\n        <td>820,901,359</td>\n    </tr>\n  </tbody>\n</table>",
+          "md": "| Other Income – Consolidated<br/>Particulars | Other Income – Consolidated<br/>Jun-26 (unaudited)<br/>Rs. | Other Income – Consolidated<br/>Jun-25 (unaudited)<br/>Rs. |\n| ------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------- |\n| Other Income                                | 725,062,972                                                | 292,483,230                                                |\n| Exchange (Loss) / Gain                      | (158,014,307)                                              | 528,418,129                                                |\n| Total                                       | 567,048,665                                                | 820,901,359                                                |",
+          "rows": [
+            [
+              "Other Income – Consolidated<br/>Particulars",
+              "Other Income – Consolidated<br/>Jun-26 (unaudited)<br/>Rs.",
+              "Other Income – Consolidated<br/>Jun-25 (unaudited)<br/>Rs."
+            ],
+            [
+              "Other Income",
+              "725,062,972",
+              "292,483,230"
+            ],
+            [
+              "Exchange (Loss) / Gain",
+              "(158,014,307)",
+              "528,418,129"
+            ],
+            [
+              "Total",
+              "567,048,665",
+              "820,901,359"
+            ]
+          ],
+          "bbox": [
+            {
+              "h": 94.08000000000004,
+              "w": 506.35999999999996,
+              "x": 53.54,
+              "y": 508.01,
+              "confidence": 0.5,
+              "end_index": 848,
+              "label": "table",
+              "start_index": 0
+            }
+          ],
+          "parse_concerns": [
+            {
+              "details": "2 tables on page",
+              "type": "multi_table_page"
+            }
+          ],
+          "type": "table"
+        }
+      ],
+      "page_height": 792.0,
+      "page_number": 2,
+      "page_width": 612.0,
+      "success": true
+    },
+    {
+      "items": [
+        {
+          "md": "Consolidated Revenue (PKR'M) - CAGR 44%",
+          "value": "Consolidated Revenue (PKR'M) - CAGR 44%",
+          "bbox": [
+            {
+              "h": 29.518242187499993,
+              "w": 184.1196926809543,
+              "x": 84.8831378892034,
+              "y": 95.03999999999999,
+              "confidence": 0.5,
+              "end_index": 38,
+              "label": "text",
+              "start_index": 0
+            }
+          ],
+          "type": "text"
+        },
+        {
+          "csv": "\"Year\",\"Consolidated Revenue (PKR'M)\"\n\"2022\",\"11,463\"\n\"2023\",\"23,189\"\n\"2024\",\"31,023\"\n\"2025\",\"36,739\"\n\"2026\",\"49,716\"",
+          "html": "<table>\n  <thead>\n    <tr>\n        <th>Year</th>\n        <th>Consolidated Revenue (PKR'M)</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n        <td>2022</td>\n        <td>11,463</td>\n    </tr>\n    <tr>\n        <td>2023</td>\n        <td>23,189</td>\n    </tr>\n    <tr>\n        <td>2024</td>\n        <td>31,023</td>\n    </tr>\n    <tr>\n        <td>2025</td>\n        <td>36,739</td>\n    </tr>\n    <tr>\n        <td>2026</td>\n        <td>49,716</td>\n    </tr>\n  </tbody>\n</table>",
+          "md": "| Year | Consolidated Revenue (PKR'M) |\n| ---- | ---------------------------- |\n| 2022 | 11,463                       |\n| 2023 | 23,189                       |\n| 2024 | 31,023                       |\n| 2025 | 36,739                       |\n| 2026 | 49,716                       |",
+          "rows": [
+            [
+              "Year",
+              "Consolidated Revenue (PKR'M)"
+            ],
+            [
+              "2022",
+              "11,463"
+            ],
+            [
+              "2023",
+              "23,189"
+            ],
+            [
+              "2024",
+              "31,023"
+            ],
+            [
+              "2025",
+              "36,739"
+            ],
+            [
+              "2026",
+              "49,716"
+            ]
+          ],
+          "bbox": [
+            {
+              "h": 131.21,
+              "w": 247.86,
+              "x": 53.13,
+              "y": 84.62,
+              "confidence": 0.5,
+              "end_index": 278,
+              "label": "chart",
+              "start_index": 0
+            }
+          ],
+          "parse_concerns": [
+            {
+              "details": "5 tables on page",
+              "type": "multi_table_page"
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "md": "Consolidated Operating Profit (PKR'M) - CAGR 29%",
+          "value": "Consolidated Operating Profit (PKR'M) - CAGR 29%",
+          "bbox": [
+            {
+              "h": 31.680000000000007,
+              "w": 170.7561665992722,
+              "x": 354.13344116457745,
+              "y": 94.54499999999999,
+              "confidence": 0.5,
+              "end_index": 47,
+              "label": "text",
+              "start_index": 0
+            }
+          ],
+          "type": "text"
+        },
+        {
+          "csv": "\"Year\",\"Consolidated Operating Profit (PKR'M)\"\n\"2022\",\"2,383\"\n\"2023\",\"3,359\"\n\"2024\",\"3,859\"\n\"2025\",\"5,083\"\n\"2026\",\"6,539\"",
+          "html": "<table>\n  <thead>\n    <tr>\n        <th>Year</th>\n        <th>Consolidated Operating Profit (PKR'M)</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n        <td>2022</td>\n        <td>2,383</td>\n    </tr>\n    <tr>\n        <td>2023</td>\n        <td>3,359</td>\n    </tr>\n    <tr>\n        <td>2024</td>\n        <td>3,859</td>\n    </tr>\n    <tr>\n        <td>2025</td>\n        <td>5,083</td>\n    </tr>\n    <tr>\n        <td>2026</td>\n        <td>6,539</td>\n    </tr>\n  </tbody>\n</table>",
+          "md": "| Year | Consolidated Operating Profit (PKR'M) |\n| ---- | ------------------------------------- |\n| 2022 | 2,383                                 |\n| 2023 | 3,359                                 |\n| 2024 | 3,859                                 |\n| 2025 | 5,083                                 |\n| 2026 | 6,539                                 |",
+          "rows": [
+            [
+              "Year",
+              "Consolidated Operating Profit (PKR'M)"
+            ],
+            [
+              "2022",
+              "2,383"
+            ],
+            [
+              "2023",
+              "3,359"
+            ],
+            [
+              "2024",
+              "3,859"
+            ],
+            [
+              "2025",
+              "5,083"
+            ],
+            [
+              "2026",
+              "6,539"
+            ]
+          ],
+          "bbox": [
+            {
+              "h": 265.12,
+              "w": 248.35999999999996,
+              "x": 315.55,
+              "y": 84.67,
+              "confidence": 0.5,
+              "end_index": 341,
+              "label": "chart",
+              "start_index": 0
+            }
+          ],
+          "parse_concerns": [
+            {
+              "details": "5 tables on page",
+              "type": "multi_table_page"
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "md": "Consolidated Net Profit (PKR'M) - CAGR 20%",
+          "value": "Consolidated Net Profit (PKR'M) - CAGR 20%",
+          "bbox": [
+            {
+              "h": 29.472351562499995,
+              "w": 189.39377610759712,
+              "x": 81.67970945331987,
+              "y": 229.81664062500002,
+              "confidence": 0.5,
+              "end_index": 41,
+              "label": "text",
+              "start_index": 0
+            }
+          ],
+          "type": "text"
+        },
+        {
+          "csv": "\"Year\",\"Consolidated Net Profit (PKR'M)\"\n\"2022\",\"2,965\"\n\"2023\",\"5,294\"\n\"2024\",\"3,243\"\n\"2025\",\"5,152\"\n\"2026\",\"6,050\"",
+          "html": "<table>\n  <thead>\n    <tr>\n        <th>Year</th>\n        <th>Consolidated Net Profit (PKR'M)</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n        <td>2022</td>\n        <td>2,965</td>\n    </tr>\n    <tr>\n        <td>2023</td>\n        <td>5,294</td>\n    </tr>\n    <tr>\n        <td>2024</td>\n        <td>3,243</td>\n    </tr>\n    <tr>\n        <td>2025</td>\n        <td>5,152</td>\n    </tr>\n    <tr>\n        <td>2026</td>\n        <td>6,050</td>\n    </tr>\n  </tbody>\n</table>",
+          "md": "| Year | Consolidated Net Profit (PKR'M) |\n| ---- | ------------------------------- |\n| 2022 | 2,965                           |\n| 2023 | 5,294                           |\n| 2024 | 3,243                           |\n| 2025 | 5,152                           |\n| 2026 | 6,050                           |",
+          "rows": [
+            [
+              "Year",
+              "Consolidated Net Profit (PKR'M)"
+            ],
+            [
+              "2022",
+              "2,965"
+            ],
+            [
+              "2023",
+              "5,294"
+            ],
+            [
+              "2024",
+              "3,243"
+            ],
+            [
+              "2025",
+              "5,152"
+            ],
+            [
+              "2026",
+              "6,050"
+            ]
+          ],
+          "bbox": [
+            {
+              "h": 131.19,
+              "w": 248.03,
+              "x": 53.09,
+              "y": 219.39,
+              "confidence": 0.5,
+              "end_index": 299,
+              "label": "chart",
+              "start_index": 0
+            }
+          ],
+          "parse_concerns": [
+            {
+              "details": "5 tables on page",
+              "type": "multi_table_page"
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "md": "Consolidated Basic EPS (PKR) - CAGR 17%",
+          "value": "Consolidated Basic EPS (PKR) - CAGR 17%",
+          "bbox": [
+            {
+              "h": 30.245015625000036,
+              "w": 172.7359482410028,
+              "x": 352.40113222806315,
+              "y": 228.44249999999997,
+              "confidence": 0.5,
+              "end_index": 38,
+              "label": "text",
+              "start_index": 0
+            }
+          ],
+          "type": "text"
+        },
+        {
+          "csv": "\"Year\",\"Consolidated Basic EPS (PKR)\"\n\"2022\",\"2.13\"\n\"2023\",\"3.64\"\n\"2024\",\"2.22\"\n\"2025\",\"3.52\"\n\"2026\",\"3.95\"",
+          "html": "<table>\n  <thead>\n    <tr>\n        <th>Year</th>\n        <th>Consolidated Basic EPS (PKR)</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n        <td>2022</td>\n        <td>2.13</td>\n    </tr>\n    <tr>\n        <td>2023</td>\n        <td>3.64</td>\n    </tr>\n    <tr>\n        <td>2024</td>\n        <td>2.22</td>\n    </tr>\n    <tr>\n        <td>2025</td>\n        <td>3.52</td>\n    </tr>\n    <tr>\n        <td>2026</td>\n        <td>3.95</td>\n    </tr>\n  </tbody>\n</table>",
+          "md": "| Year | Consolidated Basic EPS (PKR) |\n| ---- | ---------------------------- |\n| 2022 | 2.13                         |\n| 2023 | 3.64                         |\n| 2024 | 2.22                         |\n| 2025 | 3.52                         |\n| 2026 | 3.95                         |",
+          "rows": [
+            [
+              "Year",
+              "Consolidated Basic EPS (PKR)"
+            ],
+            [
+              "2022",
+              "2.13"
+            ],
+            [
+              "2023",
+              "3.64"
+            ],
+            [
+              "2024",
+              "2.22"
+            ],
+            [
+              "2025",
+              "3.52"
+            ],
+            [
+              "2026",
+              "3.95"
+            ]
+          ],
+          "parse_concerns": [
+            {
+              "details": "5 tables on page",
+              "type": "multi_table_page"
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "md": "**Unconsolidated:**",
+          "value": "Unconsolidated:",
+          "bbox": [
+            {
+              "h": 9.01,
+              "w": 75.63,
+              "x": 53.74,
+              "y": 392.37,
+              "confidence": 0.5,
+              "label": "paragraph_title"
+            }
+          ],
+          "type": "text"
+        },
+        {
+          "md": "For the six-month period ended 30<sup>th</sup> June 2026, standalone revenue grew by 19.2% year-over-year, rising from Rs. 21,718.46 million to Rs. 25,898.15 million. Gross profit increased by 9.0%, while operating profit rose by 9.4%, impacted by offshore wage and fuel inflation. Net profit and EPS are negatively impacted by exchange loss of Rs. 140.25 million against exchange gain of Rs. 561.14 million in the same period last year. Moreover, there is lower interest income from related parties due to settlement of intercompany loans. Company is diligently working on cost optimization where possible to improve margins.",
+          "value": "For the six-month period ended 30<sup>th</sup> June 2026, standalone revenue grew by 19.2% year-over-year, rising from Rs. 21,718.46 million to Rs. 25,898.15 million. Gross profit increased by 9.0%, while operating profit rose by 9.4%, impacted by offshore wage and fuel inflation. Net profit and EPS are negatively impacted by exchange loss of Rs. 140.25 million against exchange gain of Rs. 561.14 million in the same period last year. Moreover, there is lower interest income from related parties due to settlement of intercompany loans. Company is diligently working on cost optimization where possible to improve margins.",
+          "bbox": [
+            {
+              "h": 78.51,
+              "w": 506.38,
+              "x": 53.36,
+              "y": 418.88,
+              "confidence": 0.5,
+              "label": "text"
+            }
+          ],
+          "type": "text"
+        },
+        {
+          "csv": "\"Key Financial Highlights - Unconsolidated<br/>Particulars\",\"Key Financial Highlights - Unconsolidated<br/>Jun-26 (unaudited)<br/>Rs.\",\"Key Financial Highlights - Unconsolidated<br/>Jun-25 (unaudited)<br/>Rs.\",\"Key Financial Highlights - Unconsolidated<br/>Change<br/>%\"\n\"Revenue\",\"25,898,148,393\",\"21,718,456,391\",\"19.2%\"\n\"Gross Profit\",\"6,031,315,411\",\"5,533,277,584\",\"9.0%\"\n\"Operating profit\",\"3,710,138,761\",\"3,391,621,692\",\"9.4%\"\n\"Profit for the period\",\"3,460,546,829\",\"4,009,875,912\",\"-13.7%\"\n\"Earnings per share (basic)\",\"2.26\",\"2.74\",\"-17.5%\"\n\"Earnings per share (diluted)\",\"2.22\",\"2.71\",\"-18.1%\"",
+          "html": "<table>\n  <thead>\n    <tr>\n        <th colspan=\"4\">Key Financial Highlights - Unconsolidated</th>\n    </tr>\n    <tr>\n        <th>Particulars</th>\n        <th>Jun-26 (unaudited)</th>\n        <th>Jun-25 (unaudited)</th>\n        <th>Change</th>\n    </tr>\n    <tr>\n        <th> </th>\n        <th>Rs.</th>\n        <th>Rs.</th>\n        <th>%</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n        <td>Revenue</td>\n        <td>25,898,148,393</td>\n        <td>21,718,456,391</td>\n        <td>19.2%</td>\n    </tr>\n    <tr>\n        <td>Gross Profit</td>\n        <td>6,031,315,411</td>\n        <td>5,533,277,584</td>\n        <td>9.0%</td>\n    </tr>\n    <tr>\n        <td>Operating profit</td>\n        <td>3,710,138,761</td>\n        <td>3,391,621,692</td>\n        <td>9.4%</td>\n    </tr>\n    <tr>\n        <td>Profit for the period</td>\n        <td>3,460,546,829</td>\n        <td>4,009,875,912</td>\n        <td>-13.7%</td>\n    </tr>\n    <tr>\n        <td>Earnings per share (basic)</td>\n        <td>2.26</td>\n        <td>2.74</td>\n        <td>-17.5%</td>\n    </tr>\n    <tr>\n        <td>Earnings per share (diluted)</td>\n        <td>2.22</td>\n        <td>2.71</td>\n        <td>-18.1%</td>\n    </tr>\n  </tbody>\n</table>",
+          "md": "| Key Financial Highlights - Unconsolidated<br/>Particulars | Key Financial Highlights - Unconsolidated<br/>Jun-26 (unaudited)<br/>Rs. | Key Financial Highlights - Unconsolidated<br/>Jun-25 (unaudited)<br/>Rs. | Key Financial Highlights - Unconsolidated<br/>Change<br/>% |\n| --------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------ | ---------------------------------------------------------- |\n| Revenue                                                   | 25,898,148,393                                                           | 21,718,456,391                                                           | 19.2%                                                      |\n| Gross Profit                                              | 6,031,315,411                                                            | 5,533,277,584                                                            | 9.0%                                                       |\n| Operating profit                                          | 3,710,138,761                                                            | 3,391,621,692                                                            | 9.4%                                                       |\n| Profit for the period                                     | 3,460,546,829                                                            | 4,009,875,912                                                            | -13.7%                                                     |\n| Earnings per share (basic)                                | 2.26                                                                     | 2.74                                                                     | -17.5%                                                     |\n| Earnings per share (diluted)                              | 2.22                                                                     | 2.71                                                                     | -18.1%                                                     |",
+          "rows": [
+            [
+              "Key Financial Highlights - Unconsolidated<br/>Particulars",
+              "Key Financial Highlights - Unconsolidated<br/>Jun-26 (unaudited)<br/>Rs.",
+              "Key Financial Highlights - Unconsolidated<br/>Jun-25 (unaudited)<br/>Rs.",
+              "Key Financial Highlights - Unconsolidated<br/>Change<br/>%"
+            ],
+            [
+              "Revenue",
+              "25,898,148,393",
+              "21,718,456,391",
+              "19.2%"
+            ],
+            [
+              "Gross Profit",
+              "6,031,315,411",
+              "5,533,277,584",
+              "9.0%"
+            ],
+            [
+              "Operating profit",
+              "3,710,138,761",
+              "3,391,621,692",
+              "9.4%"
+            ],
+            [
+              "Profit for the period",
+              "3,460,546,829",
+              "4,009,875,912",
+              "-13.7%"
+            ],
+            [
+              "Earnings per share (basic)",
+              "2.26",
+              "2.74",
+              "-17.5%"
+            ],
+            [
+              "Earnings per share (diluted)",
+              "2.22",
+              "2.71",
+              "-18.1%"
+            ]
+          ],
+          "bbox": [
+            {
+              "h": 141.25,
+              "w": 506.53999999999996,
+              "x": 53.36,
+              "y": 510.87,
+              "confidence": 0.5,
+              "end_index": 2182,
+              "label": "table",
+              "start_index": 0
+            }
+          ],
+          "parse_concerns": [
+            {
+              "details": "5 tables on page",
+              "type": "multi_table_page"
+            }
+          ],
+          "type": "table"
+        }
+      ],
+      "page_height": 792.0,
+      "page_number": 3,
+      "page_width": 612.0,
+      "success": true
+    }
+  ]
+}

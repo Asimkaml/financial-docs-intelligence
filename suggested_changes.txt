@@ -1,0 +1,50 @@
+Enterprise Document Intelligence Platform
+
+
+AI, LangGraph, LangChain, LlamaIndex, 
+Multiple LLM support: Groq, Gemini, OpenAI, Ollama
+
+Database: PostgreSQL, ChromaDB/Qdrant
+
+Backend: FastAPI ,Redis 
+
+Frontend: React ,Tailwind
+
+Deployment: Docker ,GitHub Actions ,Nginx ,AWS/VPS
+
+Features: Multi-user authentication, Upload PDFs, Images, Excel, Word, Email, OCR pipeline, Hybrid Search, Semantic Search, BM25, Metadata Filtering, Query Rewriting, Context Compression, Agent decides retrieval strategy, Conversation memory, Citation highlighting, Document comparison, Streaming responses, Admin dashboard
+
+1. Upload Documents => Llamaparse/docling for parsing (VLM for future)  
+2. Markdown files => Chunking => Chunks + Metadata => DuckDB for Tabular data + Qdrant for storing vectors
+3.  Tools => Valuation tools (DCF, RDCF, P/E valuation) + calculation tools => Market data (psx data reader)
+
+
+=====: Claude Suggestions :=======
+
+Ingestion	Parser	LlamaParse (primary, hosted) → Docling (fallback, offline/local) ✅
+
+Ingestion	Currency/units	PKR-native, single-currency normalization; FX only needed for cross-market comparison
+
+Ingestion	Metadata	Tag every chunk with company, period_type (annual/quarterly), fiscal_period at index time
+
+Structured store	Tabular data	DuckDB, holding extracted line items per filing
+
+Vector store	Retrieval	Qdrant, hybrid dense+sparse (unchanged)
+
+Embeddings	Model	BGE (bge-large-en-v1.5) or Qwen3-Embedding — open source
+
+Reranker	Precision	bge-reranker-v2-m3 — open source
+
+Market data	Prices/shares outstanding	psx-data-reader
+
+Market data	Risk-free rate	SBP T-bill rates (scrape or user-supplied override)
+
+Valuation tools	DCF, P/E	financetoolkit + custom LangGraph tools (calculate_dcf, calculate_pe, get_market_data)
+
+LLM	Orchestration	Still open — recommend prototyping the valuation tool chain on both a 30B+ local model and an API model on real PSX filings before deciding
+
+Observability	Tracing	Langfuse, self-hosted
+
+Embeddings: voyage-finance-2 (proprietary, API-based) is genuinely stronger on financial-domain retrieval than BGE/Qwen — worth testing against your PSX corpus now that it's not ruled out by default. BGE stays the free fallback if the quality gap doesn't justify the cost.
+Reranker: Cohere's hosted rerank vs bge-reranker-v2-m3 — same logic, worth an A/B on your own filings.
+LLM: this was already open either way, so no change there.
