@@ -346,5 +346,6 @@ It reports counts and prints the tables now in DuckDB.
 | `409` on delete or clear | An ingestion is still running | Wait for the upload job to reach `done`, then retry |
 | Old conversation stops working after switching LLM | The agent graph (and its checkpointer) was rebuilt | Start a new thread (omit `thread_id`) |
 
-References:
+### References:  
+
 https://github.com/GiovanniPasq/agentic-rag-for-dummies
